@@ -1,0 +1,6 @@
+applications:
+- name: lrsc-bridge
+  memory: 128M
+  host: lrsc-bridge
+  buildpack: https://github.com/cloudfoundry/go-buildpack
+  command: lrsc-bridge
