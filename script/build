@@ -1,5 +1,8 @@
 #!/bin/bash -ex
 
+export GOPATH=$WORKSPACE
+export PATH="$GOPATH/bin:$PATH"
+
 go get github.com/tools/godep
 godep restore
 go test
