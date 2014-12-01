@@ -1,5 +1,20 @@
 {
 	"ImportPath": "lrsc-bridge",
 	"GoVersion": "go1.3.3",
-	"Deps": []
+	"Deps": [
+		{
+			"ImportPath": "code.google.com/p/go.net/websocket",
+			"Comment": "null-228",
+			"Rev": "80a277b6a70cfe749ed0e39931c5ff3220f13518"
+		},
+		{
+			"ImportPath": "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
+			"Rev": "0d6c6e73b249ca8d48fde878b4d1cfbb4cd45a5e"
+		},
+		{
+			"ImportPath": "github.com/onsi/gomega",
+			"Comment": "v1.0-25-g85936b2",
+			"Rev": "85936b29809b7df066a8d839dd105e158e510264"
+		}
+	]
 }
