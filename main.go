@@ -4,20 +4,48 @@ import (
 	"encoding/json"
 	"fmt"
 	MQTT "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
+	"log"
 	"net/http"
 	"os"
 )
 
 func main() {
-	fmt.Printf("%v", extractIotfCreds(os.Getenv("VCAP_SERVICES")))
+	iotfCreds := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
+	iotfClient := connectToIotf(iotfCreds)
+
+	testIotfConnection(iotfClient)
+
 	http.HandleFunc("/", hello)
 	http.HandleFunc("/env", env)
-	fmt.Println("listening...")
+
 	err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 	if err != nil {
 		panic(err)
 	}
-	_ = MQTT.NewClientOptions().AddBroker("tcp://iot.eclipse.org:1883")
+}
+
+func connectToIotf(iotfCreds map[string]string) *MQTT.MqttClient {
+	clientOpts := MQTT.NewClientOptions()
+	clientOpts.AddBroker(iotfCreds["uri"])
+	clientOpts.SetClientId(fmt.Sprintf("a:%v:lrsc-client", iotfCreds["org"]))
+	clientOpts.SetUsername(iotfCreds["user"])
+	clientOpts.SetPassword(iotfCreds["password"])
+	MQTT.WARN = log.New(os.Stdout, "", 0)
+	MQTT.ERROR = log.New(os.Stdout, "", 0)
+
+	client := MQTT.NewClient(clientOpts)
+	_, err := client.Start()
+	if err != nil {
+		panic(err)
+	}
+
+	return client
+}
+
+func testIotfConnection(client *MQTT.MqttClient) {
+	topic := "iot-2/type/Dummy/id/lrsc-client-test-sensor-1/evt/TEST/fmt/json"
+	message := MQTT.NewMessage([]byte(`{"msg": "Hello world"}`))
+	client.PublishMessage(topic, message)
 }
 
 func hello(res http.ResponseWriter, req *http.Request) {
@@ -48,6 +76,7 @@ func extractIotfCreds(services string) map[string]string {
 	conf := make(map[string]string)
 	conf["user"] = iotfCreds["apiKey"].(string)
 	conf["password"] = iotfCreds["apiToken"].(string)
-	conf["uri"] = fmt.Sprintf("tcp://%v:%v", iotfCreds["mqtt_host"], iotfCreds["mqtt_u_port"])
+	conf["uri"] = fmt.Sprintf("tls://%v:%v", iotfCreds["mqtt_host"], iotfCreds["mqtt_s_port"])
+	conf["org"] = iotfCreds["org"].(string)
 	return conf
 }
