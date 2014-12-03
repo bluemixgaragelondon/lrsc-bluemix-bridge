@@ -9,14 +9,15 @@ import (
 	"os"
 )
 
+var iotfClient *MQTT.MqttClient
+
 func main() {
 	iotfCreds := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
-	iotfClient := connectToIotf(iotfCreds)
-
-	testIotfConnection(iotfClient)
+	iotfClient = connectToIotf(iotfCreds)
 
 	http.HandleFunc("/", hello)
 	http.HandleFunc("/env", env)
+	http.HandleFunc("/testpublish", testPublish)
 
 	err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 	if err != nil {
@@ -42,12 +43,6 @@ func connectToIotf(iotfCreds map[string]string) *MQTT.MqttClient {
 	return client
 }
 
-func testIotfConnection(client *MQTT.MqttClient) {
-	topic := "iot-2/type/Dummy/id/lrsc-client-test-sensor-1/evt/TEST/fmt/json"
-	message := MQTT.NewMessage([]byte(`{"msg": "Hello world"}`))
-	client.PublishMessage(topic, message)
-}
-
 func hello(res http.ResponseWriter, req *http.Request) {
 	fmt.Fprintln(res, "hello, world")
 }
@@ -57,6 +52,13 @@ func env(res http.ResponseWriter, req *http.Request) {
 	for key, value := range os.Environ() {
 		fmt.Fprintf(res, "%v = %v\n", key, value)
 	}
+}
+
+func testPublish(res http.ResponseWriter, req *http.Request) {
+	topic := "iot-2/type/Dummy/id/lrsc-client-test-sensor-1/evt/TEST/fmt/json"
+	message := MQTT.NewMessage([]byte(`{"msg": "Hello world"}`))
+	iotfClient.PublishMessage(topic, message)
+	fmt.Fprintf(res, "done")
 }
 
 func extractIotfCreds(services string) map[string]string {
