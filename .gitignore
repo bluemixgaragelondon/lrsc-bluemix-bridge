@@ -1,2 +1,4 @@
 lrsc-bridge
 Godeps/_workspace
+client.cert
+client.key

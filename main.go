@@ -11,9 +11,17 @@ import (
 
 var iotfClient *MQTT.MqttClient
 
+var logger = log.New(os.Stdout, "", 0)
+
 func main() {
+
 	iotfCreds := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
 	iotfClient = connectToIotf(iotfCreds)
+
+	cert := readCertificate(os.Getenv("CLIENT_CERT"))
+	key := readCertificate(os.Getenv("CLIENT_KEY"))
+	lrscConn := CreateLrscConnection("dev.lrsc.ch", "55055", cert, key)
+	lrscConn.Connect()
 
 	http.HandleFunc("/", hello)
 	http.HandleFunc("/env", env)
@@ -21,7 +29,7 @@ func main() {
 
 	err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 	if err != nil {
-		panic(err)
+		logger.Panic(err)
 	}
 }
 
@@ -37,7 +45,7 @@ func connectToIotf(iotfCreds map[string]string) *MQTT.MqttClient {
 	client := MQTT.NewClient(clientOpts)
 	_, err := client.Start()
 	if err != nil {
-		panic(err)
+		logger.Panic(err)
 	}
 
 	return client
@@ -65,12 +73,12 @@ func extractIotfCreds(services string) map[string]string {
 	servicesJson := make(map[string]interface{})
 	err := json.Unmarshal([]byte(services), &servicesJson)
 	if err != nil {
-		panic(err)
+		logger.Panic(fmt.Sprintf("%v (probably missing configuration)", err))
 	}
 
 	iotfBindings := servicesJson["iotf-service"].([]interface{})
 	if err != nil {
-		panic(err)
+		logger.Panic(err)
 	}
 	iotf := iotfBindings[0].(map[string]interface{})
 
