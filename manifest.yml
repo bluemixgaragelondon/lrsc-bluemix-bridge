@@ -4,3 +4,6 @@ applications:
   host: lrsc-bridge
   buildpack: https://github.com/cloudfoundry/go-buildpack
   command: lrsc-bridge
+  env:
+    CLIENT_CERT: client.cert
+    CLIENT_KEY: client.key

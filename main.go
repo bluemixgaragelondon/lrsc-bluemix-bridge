@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	MQTT "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -18,16 +19,28 @@ func main() {
 	iotfCreds := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
 	iotfClient = connectToIotf(iotfCreds)
 
-	cert := readCertificate(os.Getenv("CLIENT_CERT"))
-	key := readCertificate(os.Getenv("CLIENT_KEY"))
-	lrscConn := CreateLrscConnection("dev.lrsc.ch", "55055", cert, key)
-	lrscConn.Connect()
+	cert, err := ioutil.ReadFile(os.Getenv("CLIENT_CERT"))
+	if err != nil {
+		logger.Panic(err)
+	}
+	key, err := ioutil.ReadFile(os.Getenv("CLIENT_KEY"))
+	if err != nil {
+		logger.Panic(err)
+	}
+	lrscConn, err := CreateLrscConnection("dev.lrsc.ch", "55055", cert, key)
+	if err != nil {
+		logger.Panic(err)
+	}
+	err = lrscConn.Connect()
+	if err != nil {
+		logger.Panic(err)
+	}
 
 	http.HandleFunc("/", hello)
 	http.HandleFunc("/env", env)
 	http.HandleFunc("/testpublish", testPublish)
 
-	err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
+	err = http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 	if err != nil {
 		logger.Panic(err)
 	}
