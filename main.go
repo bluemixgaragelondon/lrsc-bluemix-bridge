@@ -6,34 +6,42 @@ import (
 	MQTT "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
 	"io/ioutil"
 	"log"
+	"log/syslog"
 	"net/http"
 	"os"
 )
 
 var iotfClient *MQTT.MqttClient
 
-var logger = log.New(os.Stdout, "", 0)
+var logger, logErr = syslog.Dial("udp", "logs2.papertrailapp.com:45777", syslog.LOG_LOCAL0|syslog.LOG_DEBUG, "bridge")
 
 func main() {
+	if logErr != nil {
+		fmt.Println(logErr)
+	}
 
 	iotfCreds := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
 	iotfClient = connectToIotf(iotfCreds)
 
 	cert, err := ioutil.ReadFile(os.Getenv("CLIENT_CERT"))
 	if err != nil {
-		logger.Panic(err)
+		logger.Err(err.Error())
+		panic(err)
 	}
 	key, err := ioutil.ReadFile(os.Getenv("CLIENT_KEY"))
 	if err != nil {
-		logger.Panic(err)
+		logger.Err(err.Error())
+		panic(err)
 	}
 	lrscConn, err := CreateLrscConnection("dev.lrsc.ch", "55055", cert, key)
 	if err != nil {
-		logger.Panic(err)
+		logger.Err(err.Error())
+		panic(err)
 	}
 	err = lrscConn.Connect()
 	if err != nil {
-		logger.Panic(err)
+		logger.Err(err.Error())
+		panic(err)
 	}
 
 	http.HandleFunc("/", hello)
@@ -42,7 +50,8 @@ func main() {
 
 	err = http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 	if err != nil {
-		logger.Panic(err)
+		logger.Err(err.Error())
+		panic(err)
 	}
 }
 
@@ -58,7 +67,7 @@ func connectToIotf(iotfCreds map[string]string) *MQTT.MqttClient {
 	client := MQTT.NewClient(clientOpts)
 	_, err := client.Start()
 	if err != nil {
-		logger.Panic(err)
+		logger.Err(err.Error())
 	}
 
 	return client
@@ -86,12 +95,12 @@ func extractIotfCreds(services string) map[string]string {
 	servicesJson := make(map[string]interface{})
 	err := json.Unmarshal([]byte(services), &servicesJson)
 	if err != nil {
-		logger.Panic(fmt.Sprintf("%v (probably missing configuration)", err))
+		logger.Err(fmt.Sprintf("%v (probably missing configuration)", err))
 	}
 
 	iotfBindings := servicesJson["iotf-service"].([]interface{})
 	if err != nil {
-		logger.Panic(err)
+		logger.Err(err.Error())
 	}
 	iotf := iotfBindings[0].(map[string]interface{})
 

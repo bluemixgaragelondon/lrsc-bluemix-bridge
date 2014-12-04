@@ -16,7 +16,7 @@ func CreateLrscConnection(hostname, port string, cert, key []byte) (*LrscConnect
 	certificate, err := tls.X509KeyPair(cert, key)
 
 	if err != nil {
-		logger.Printf("Invalid certificate/key (%v)", err)
+		logger.Debug("Invalid certificate/key: " + err.Error())
 		return nil, err
 	}
 
@@ -33,40 +33,40 @@ func (self *LrscConnection) Connect() error {
 	conn, err := tls.Dial("tcp", self.endpoint, context)
 
 	if err != nil {
-		logger.Printf("Could not initiate TCP connection (%v)", err)
+		logger.Debug("Could not initiate TCP connection: " + err.Error())
 		return err
 	}
 
-	logger.Printf("connecting to LRSC endpoint...")
+	logger.Debug("connecting to LRSC endpoint...")
 	self.conn = conn
 
 	err = self.handshake()
 	if err != nil {
-		logger.Printf("Could not perform handshake (%v)", err)
+		logger.Debug("Could not perform handshake: " + err.Error())
 		return err
 	}
 
-	logger.Printf("handshake completed, connected to %v", self.endpoint)
+	logger.Debug("handshake completed, connected to " + self.endpoint)
 	return nil
 }
 
 func (self *LrscConnection) handshake() error {
 	err := self.send("JSON_000")
 	if err != nil {
-		logger.Printf("handshake failed (%v)", err)
+		logger.Debug("handshake failed: " + err.Error())
 		return err
 	}
 
 	hello := `{"msgtag":1,"eui":"FF-00-00-00-00-00-00-00","euidom":0,"major":1,"minor":0,"build":0,"name":"LRSC Client"}`
 	err = self.send(hello)
 	if err != nil {
-		logger.Printf("handshake failed (%v)", err)
+		logger.Debug("handshake failed: " + err.Error())
 		return err
 	}
 
 	err = self.send("\n\n")
 	if err != nil {
-		logger.Printf("handshake failed (%v)", err)
+		logger.Debug("handshake failed: " + err.Error())
 		return err
 	}
 
@@ -78,7 +78,7 @@ func (self *LrscConnection) handshake() error {
 
 	_, err = self.read()
 	if err != nil {
-		logger.Printf("Did not receive ack in handshake (%v)", err)
+		logger.Debug("Did not receive ack in handshake: " + err.Error())
 		return err
 	}
 
@@ -90,7 +90,7 @@ func (self *LrscConnection) send(message string) error {
 
 	_, err := self.conn.Write(data)
 	if err == nil {
-		logger.Printf(">>> %v\n", message)
+		logger.Debug(">>> " + message)
 	}
 	return err
 }
@@ -99,6 +99,6 @@ func (self *LrscConnection) read() (string, error) {
 	data := make([]byte, 4096)
 	length, err := self.conn.Read(data)
 	msg := string(data[0:length])
-	logger.Printf("<<< %v\n", msg)
+	logger.Debug("<<< " + msg)
 	return msg, err
 }
