@@ -5,32 +5,44 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 )
 
 type LrscConnection struct {
-	endpoint   string
-	conn       *tls.Conn
-	sslContext *tls.Config
-	scanner    *bufio.Scanner
+	conn    io.ReadWriteCloser
+	scanner *bufio.Reader
+	dialer  Dialer
 }
 
-func CreateLrscConnection(hostname, port string, cert, key []byte) (*LrscConnection, error) {
-	certificate, err := tls.X509KeyPair(cert, key)
+type Dialer interface {
+	Dial() (io.ReadWriteCloser, error)
+	Endpoint() string
+}
 
+type TlsDialer struct {
+	endpoint   string
+	sslContext *tls.Config
+}
+
+func (self *TlsDialer) Dial() (io.ReadWriteCloser, error) {
+	return tls.Dial("tcp", self.endpoint, self.sslContext)
+}
+
+func (self *TlsDialer) Endpoint() string {
+	return self.endpoint
+}
+
+func CreateTlsDialer(hostname, port string, cert, key []byte) (Dialer, error) {
+	context := &tls.Config{InsecureSkipVerify: true}
+	certificate, err := tls.X509KeyPair(cert, key)
 	if err != nil {
-		logger.Err("Invalid certificate/key: " + err.Error())
 		return nil, err
 	}
 
-	endpoint := fmt.Sprintf("%v:%v", hostname, port)
-
-	context := &tls.Config{InsecureSkipVerify: true}
 	context.Certificates = []tls.Certificate{certificate}
-
-	lrscConnection := &LrscConnection{endpoint: endpoint, sslContext: context}
-
-	return lrscConnection, nil
+	endpoint := fmt.Sprintf("%v:%v", hostname, port)
+	return &TlsDialer{endpoint: endpoint, sslContext: context}, nil
 }
 
 func (self *LrscConnection) StartListening(buffer chan string) {
@@ -43,6 +55,7 @@ func (self *LrscConnection) StartListening(buffer chan string) {
 				self.connect()
 				continue
 			}
+			fmt.Println("I got here with " + message)
 
 			if len(message) == 0 {
 				continue
@@ -78,7 +91,9 @@ func (self *LrscConnection) establish() error {
 	if self.conn != nil {
 		self.conn.Close()
 	}
-	conn, err := tls.Dial("tcp", self.endpoint, self.sslContext)
+
+	conn, err := self.dialer.Dial()
+
 	if err != nil {
 		logger.Err("Could not establish TCP connection")
 		return err
@@ -86,7 +101,8 @@ func (self *LrscConnection) establish() error {
 	logger.Info("Connected successfully")
 
 	self.conn = conn
-	self.scanner = bufio.NewScanner(self.conn)
+	self.scanner = bufio.NewReader(self.conn)
+	//self.scanner = bufio.NewScanner(self.conn)
 
 	err = self.handshake()
 	if err != nil {
@@ -117,19 +133,15 @@ func (self *LrscConnection) handshake() error {
 		return err
 	}
 
-	// Handshake should get immediate response, so set short timeout
-	self.conn.SetReadDeadline(time.Now().Add(5 * time.Second))
-
-	// All other messages could arrive any time, so reset after this function
-	defer self.conn.SetReadDeadline(time.Time{})
-
+	fmt.Println("1")
 	_, err = self.readLine()
+	fmt.Println('2')
 	if err != nil {
 		logger.Err("Did not receive ack in handshake: " + err.Error())
 		return err
 	}
 
-	logger.Info("handshake completed, connected to " + self.endpoint)
+	logger.Info("handshake completed, connected to " + self.dialer.Endpoint())
 
 	return nil
 }
@@ -150,14 +162,24 @@ func (self *LrscConnection) send(message string) error {
 }
 
 func (self *LrscConnection) readLine() (string, error) {
-	status := self.scanner.Scan()
-	if !status {
-		logger.Warning("read from socket failed: " + self.scanner.Err().Error())
+	data, _, err := self.scanner.ReadLine()
+	if err != nil {
 		return "", errors.New("failed to read message")
+		fmt.Println(err)
 	}
-
-	message := self.scanner.Text()
-
-	logger.Debug("<<< " + message)
+	message := string(data)
 	return message, nil
 }
+
+//status := self.scanner.Scan()
+//if !status {
+//	logger.Warning("read from socket failed: " + self.scanner.Err().Error())
+//	return "", errors.New("failed to read message")
+//	fmt.Println(self.scanner.Err())
+//}
+
+//message := self.scanner.Text()
+
+//logger.Debug("<<< " + message)
+//fmt.Println("<<< " + message)
+//return message, nil

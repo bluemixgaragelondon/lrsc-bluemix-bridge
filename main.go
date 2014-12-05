@@ -33,11 +33,14 @@ func main() {
 		logger.Err(err.Error())
 		panic(err)
 	}
-	lrscConn, err := CreateLrscConnection("dev.lrsc.ch", "55055", cert, key)
+
+	dialer, err := CreateTlsDialer("dev.lrsc.ch", "55055", cert, key)
 	if err != nil {
 		logger.Err(err.Error())
 		panic(err)
 	}
+
+	lrscConn := &LrscConnection{dialer: dialer}
 	messages := make(chan string)
 	lrscConn.StartListening(messages)
 
