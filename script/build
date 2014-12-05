@@ -5,5 +5,5 @@ export PATH="$GOPATH/bin:$PATH"
 
 go get github.com/tools/godep
 godep restore
-go test
+go test -v
 go build -o lrsc-bridge
