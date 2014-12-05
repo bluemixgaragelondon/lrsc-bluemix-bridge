@@ -13,7 +13,7 @@ import (
 
 var iotfClient *MQTT.MqttClient
 
-var logger, logErr = syslog.Dial("udp", "logs2.papertrailapp.com:45777", syslog.LOG_LOCAL0|syslog.LOG_DEBUG, "bridge")
+var logger, logErr = syslog.Dial("tcp", "logs2.papertrailapp.com:45777", syslog.LOG_SYSLOG|syslog.LOG_INFO, "bridge")
 
 func main() {
 	if logErr != nil {
@@ -38,11 +38,14 @@ func main() {
 		logger.Err(err.Error())
 		panic(err)
 	}
-	err = lrscConn.Connect()
-	if err != nil {
-		logger.Err(err.Error())
-		panic(err)
-	}
+	messages := make(chan string)
+	lrscConn.StartListening(messages)
+
+	go func() {
+		for {
+			logger.Info("message received: " + <-messages)
+		}
+	}()
 
 	http.HandleFunc("/", hello)
 	http.HandleFunc("/env", env)
