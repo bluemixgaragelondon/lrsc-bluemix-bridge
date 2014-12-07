@@ -55,7 +55,6 @@ func (self *LrscConnection) StartListening(buffer chan string) {
 				self.connect()
 				continue
 			}
-			fmt.Println("I got here with " + message)
 
 			if len(message) == 0 {
 				continue
@@ -70,6 +69,7 @@ func (self *LrscConnection) Close() {
 	if self.conn != nil {
 		self.conn.Close()
 	}
+
 }
 
 func (self *LrscConnection) connect() {
@@ -133,9 +133,7 @@ func (self *LrscConnection) handshake() error {
 		return err
 	}
 
-	fmt.Println("1")
 	_, err = self.readLine()
-	fmt.Println('2')
 	if err != nil {
 		logger.Err("Did not receive ack in handshake: " + err.Error())
 		return err
@@ -170,16 +168,3 @@ func (self *LrscConnection) readLine() (string, error) {
 	message := string(data)
 	return message, nil
 }
-
-//status := self.scanner.Scan()
-//if !status {
-//	logger.Warning("read from socket failed: " + self.scanner.Err().Error())
-//	return "", errors.New("failed to read message")
-//	fmt.Println(self.scanner.Err())
-//}
-
-//message := self.scanner.Text()
-
-//logger.Debug("<<< " + message)
-//fmt.Println("<<< " + message)
-//return message, nil
