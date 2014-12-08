@@ -133,15 +133,23 @@ func (self *LrscConnection) handshake() error {
 		return err
 	}
 
-	_, err = self.readLine()
+	handshake, err := self.readLine()
 	if err != nil {
 		logger.Err("Did not receive ack in handshake: " + err.Error())
 		return err
 	}
 
-	logger.Info("handshake completed, connected to " + self.dialer.Endpoint())
+	if validateHandshake(handshake) {
+		logger.Info("handshake completed, connected to " + self.dialer.Endpoint())
+	} else {
+		logger.Err("Failed to validate handshake response")
+	}
 
 	return nil
+}
+
+func validateHandshake(handshake string) bool {
+	return true
 }
 
 func (self *LrscConnection) Listen() (chan string, error) {
@@ -166,5 +174,6 @@ func (self *LrscConnection) readLine() (string, error) {
 		fmt.Println(err)
 	}
 	message := string(data)
+	logger.Debug("<<< " + message)
 	return message, nil
 }

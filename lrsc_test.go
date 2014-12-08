@@ -6,6 +6,8 @@ import (
 	"testing"
 )
 
+var response string
+
 type TestDialer struct {
 }
 
@@ -21,7 +23,7 @@ type MockConnection struct {
 }
 
 func (self *MockConnection) Read(b []byte) (n int, err error) {
-	response := []byte("response\n")
+	response := []byte(response)
 	copy(b, response)
 	return len(response), nil
 }
@@ -34,8 +36,16 @@ func (self *MockConnection) Close() error {
 	return nil
 }
 
-func TestHandshake(t *testing.T) {
+func TestValidateHandshake(t *testing.T) {
 	RegisterTestingT(t)
+
+	response = "some_handshake_response\n"
+	Expect(validateHandshake(response)).To(Equal(true))
+}
+
+func TestReceiveMessage(t *testing.T) {
+	RegisterTestingT(t)
+	response = "response\n"
 
 	testDialer := &TestDialer{}
 	lrscConn := &LrscConnection{dialer: testDialer}
@@ -44,5 +54,4 @@ func TestHandshake(t *testing.T) {
 	message := <-messages
 
 	Expect(message).To(Equal("response"))
-
 }
