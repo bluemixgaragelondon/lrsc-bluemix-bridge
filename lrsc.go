@@ -51,7 +51,7 @@ func (self *LrscConnection) StartListening(buffer chan string) {
 		for {
 			message, err := self.readLine()
 			if err != nil {
-				logger.Err("read failed: " + err.Error())
+				logger.Error("read failed (%v)", err)
 				self.connect()
 				continue
 			}
@@ -95,7 +95,7 @@ func (self *LrscConnection) establish() error {
 	conn, err := self.dialer.Dial()
 
 	if err != nil {
-		logger.Err("Could not establish TCP connection")
+		logger.Error("Could not establish TCP connection")
 		return err
 	}
 	logger.Info("Connected successfully")
@@ -106,7 +106,7 @@ func (self *LrscConnection) establish() error {
 
 	err = self.handshake()
 	if err != nil {
-		logger.Err("Could not perform handshake: " + err.Error())
+		logger.Error("Could not perform handshake: " + err.Error())
 		return err
 	}
 
@@ -123,26 +123,26 @@ func (self *LrscConnection) handshake() error {
 	hello := `{"msgtag":1,"eui":"FF-00-00-00-00-00-00-00","euidom":0,"major":1,"minor":0,"build":0,"name":"LRSC Client"}`
 	err = self.send(hello)
 	if err != nil {
-		logger.Err("handshake failed: " + err.Error())
+		logger.Error("handshake failed: " + err.Error())
 		return err
 	}
 
 	err = self.send("\n\n")
 	if err != nil {
-		logger.Err("handshake failed: " + err.Error())
+		logger.Error("handshake failed: " + err.Error())
 		return err
 	}
 
 	handshake, err := self.readLine()
 	if err != nil {
-		logger.Err("Did not receive ack in handshake: " + err.Error())
+		logger.Error("Did not receive ack in handshake: " + err.Error())
 		return err
 	}
 
 	if validateHandshake(handshake) {
 		logger.Info("handshake completed, connected to " + self.dialer.Endpoint())
 	} else {
-		logger.Err("Failed to validate handshake response")
+		logger.Error("Failed to validate handshake response")
 	}
 
 	return nil

@@ -12,6 +12,11 @@
 			"Rev": "0d6c6e73b249ca8d48fde878b4d1cfbb4cd45a5e"
 		},
 		{
+			"ImportPath": "github.com/cromega/clogger",
+			"Comment": "0.1-2-gbf5d856",
+			"Rev": "bf5d856fae6c85b199ff86a2e3633e49e51b7ec0"
+		},
+		{
 			"ImportPath": "github.com/onsi/gomega",
 			"Comment": "v1.0-25-g85936b2",
 			"Rev": "85936b29809b7df066a8d839dd105e158e510264"
