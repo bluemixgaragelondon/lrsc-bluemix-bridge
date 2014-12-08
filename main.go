@@ -7,13 +7,17 @@ import (
 	"io/ioutil"
 	"log"
 	"log/syslog"
+	"math/rand"
 	"net/http"
 	"os"
+	"time"
 )
 
 var iotfClient *MQTT.MqttClient
 
 var logger, logErr = syslog.Dial("tcp", "logs2.papertrailapp.com:45777", syslog.LOG_SYSLOG|syslog.LOG_INFO, "bridge")
+
+var topic = "iot-2/type/Dummy/id/lrsc-client-test-sensor-1/evt/TEST/fmt/json"
 
 func main() {
 	if logErr != nil {
@@ -46,7 +50,10 @@ func main() {
 
 	go func() {
 		for {
-			logger.Info("message received: " + <-messages)
+			message := <-messages
+			logger.Info("Forwarding message from LRSC to IoTF: " + message)
+			mqttMessage := MQTT.NewMessage([]byte(message))
+			iotfClient.PublishMessage(topic, mqttMessage)
 		}
 	}()
 
@@ -64,11 +71,17 @@ func main() {
 func connectToIotf(iotfCreds map[string]string) *MQTT.MqttClient {
 	clientOpts := MQTT.NewClientOptions()
 	clientOpts.AddBroker(iotfCreds["uri"])
-	clientOpts.SetClientId(fmt.Sprintf("a:%v:lrsc-client", iotfCreds["org"]))
+	clientOpts.SetClientId(fmt.Sprintf("a:%v:$v", iotfCreds["org"], generateClientIdSuffix()))
 	clientOpts.SetUsername(iotfCreds["user"])
 	clientOpts.SetPassword(iotfCreds["password"])
+
+	clientOpts.SetOnConnectionLost(func(client *MQTT.MqttClient, err error) {
+		logger.Err("IoTF connection lost handler called: " + err.Error())
+	})
+
 	MQTT.WARN = log.New(os.Stdout, "", 0)
 	MQTT.ERROR = log.New(os.Stdout, "", 0)
+	MQTT.DEBUG = log.New(os.Stdout, "", 0)
 
 	client := MQTT.NewClient(clientOpts)
 	_, err := client.Start()
@@ -77,6 +90,12 @@ func connectToIotf(iotfCreds map[string]string) *MQTT.MqttClient {
 	}
 
 	return client
+}
+
+func generateClientIdSuffix() string {
+	rand.Seed(time.Now().UTC().UnixNano())
+	suffix := rand.Intn(1000)
+	return string(suffix)
 }
 
 func hello(res http.ResponseWriter, req *http.Request) {
@@ -91,7 +110,6 @@ func env(res http.ResponseWriter, req *http.Request) {
 }
 
 func testPublish(res http.ResponseWriter, req *http.Request) {
-	topic := "iot-2/type/Dummy/id/lrsc-client-test-sensor-1/evt/TEST/fmt/json"
 	message := MQTT.NewMessage([]byte(`{"msg": "Hello world"}`))
 	iotfClient.PublishMessage(topic, message)
 	fmt.Fprintf(res, "done")
