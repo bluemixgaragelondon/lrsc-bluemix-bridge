@@ -7,3 +7,4 @@ applications:
   env:
     CLIENT_CERT: client.cert
     CLIENT_KEY: client.key
+    REMOTE_LOG_URL: udp://logs2.papertrailapp.com:45777
