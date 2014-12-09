@@ -10,9 +10,6 @@ import (
 	"time"
 )
 
-type mqttClient struct {
-}
-
 func connectToIotf(iotfCreds map[string]string) *MQTT.MqttClient {
 	clientOpts := MQTT.NewClientOptions()
 	clientOpts.AddBroker(iotfCreds["uri"])
