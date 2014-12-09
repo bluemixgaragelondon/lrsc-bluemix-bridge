@@ -1,10 +1,12 @@
+memory: 128M
+buildpack: https://github.com/cloudfoundry/go-buildpack
+command: lrsc-bridge
+env:
+  CLIENT_CERT: client.cert
+  CLIENT_KEY: client.key
 applications:
-- name: lrsc-bridge
-  memory: 128M
-  host: lrsc-bridge
-  buildpack: https://github.com/cloudfoundry/go-buildpack
-  command: lrsc-bridge
+- name: lrsc-bridge-dev
+  host: lrsc-bridge-dev
   env:
-    CLIENT_CERT: client.cert
-    CLIENT_KEY: client.key
     REMOTE_LOG_URL: udp://logs2.papertrailapp.com:45777
+    LRSC_ENV: dev
