@@ -1,57 +1,96 @@
 package main
 
 import (
+	"errors"
 	. "github.com/onsi/gomega"
 	"io"
 	"testing"
 )
 
-var response string
-
 type TestDialer struct {
+	conn io.ReadWriteCloser
 }
 
-func (self *TestDialer) Dial() (io.ReadWriteCloser, error) {
-	return &MockConnection{}, nil
+func (self TestDialer) Dial() (io.ReadWriteCloser, error) {
+	return self.conn, nil
 }
 
 func (self *TestDialer) Endpoint() string {
 	return "/dev/null"
 }
 
+func TestValidateHandshake(t *testing.T) {
+	RegisterTestingT(t)
+
+	response := "some_handshake_response\n"
+	Expect(validateHandshake(response)).To(Equal(true))
+}
+
 type MockConnection struct {
+	readFunc  func() (string, error)
+	writeFunc func(string) error
 }
 
 func (self *MockConnection) Read(b []byte) (n int, err error) {
-	response := []byte(response)
+	response, err := self.readFunc()
 	copy(b, response)
-	return len(response), nil
+	return len(response), err
 }
 
 func (self *MockConnection) Write(b []byte) (n int, err error) {
-	return len(b), nil
+	err = self.writeFunc(string(b))
+	return len(b), err
 }
 
 func (self *MockConnection) Close() error {
 	return nil
 }
 
-func TestValidateHandshake(t *testing.T) {
-	RegisterTestingT(t)
-
-	response = "some_handshake_response\n"
-	Expect(validateHandshake(response)).To(Equal(true))
-}
-
 func TestReceiveMessage(t *testing.T) {
 	RegisterTestingT(t)
-	response = "response\n"
 
-	testDialer := &TestDialer{}
+	mockConn := &MockConnection{
+		readFunc: func() (string, error) {
+			return "response\n", nil
+		},
+		writeFunc: func(string) error {
+			return nil
+		}}
+	testDialer := &TestDialer{conn: mockConn}
 	lrscConn := &LrscConnection{dialer: testDialer}
 	messages := make(chan string)
-	lrscConn.StartListening(messages)
-	message := <-messages
 
-	Expect(message).To(Equal("response"))
+	lrscConn.StartListening(messages)
+	Expect(<-messages).To(Equal("response"))
+}
+
+func TestReconnect(t *testing.T) {
+	RegisterTestingT(t)
+
+	count := 0
+	connectionAttempts := 0
+
+	mockConn := &MockConnection{
+		readFunc: func() (string, error) {
+			if count == 0 {
+				count += 1
+				return "", errors.New("EOF")
+			} else {
+				return "response\n", nil
+			}
+		},
+		writeFunc: func(message string) error {
+			if message == "JSON_000" {
+				connectionAttempts += 1
+			}
+			return nil
+		}}
+
+	testDialer := &TestDialer{conn: mockConn}
+	lrscConn := &LrscConnection{dialer: testDialer}
+	messages := make(chan string)
+
+	lrscConn.StartListening(messages)
+	Expect(<-messages).To(Equal("response"))
+	Expect(connectionAttempts).To(Equal(2))
 }
