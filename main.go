@@ -33,7 +33,7 @@ func main() {
 	}
 
 	lrscConn := &LrscConnection{dialer: dialer}
-	messages := make(chan string)
+	messages := make(chan lrscMessage)
 	lrscConn.StartListening(messages)
 
 	iotfCreds := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
@@ -42,8 +42,8 @@ func main() {
 	go func() {
 		for {
 			message := <-messages
-			logger.Info("Forwarding message from LRSC to IoTF: " + message)
-			mqttMessage := MQTT.NewMessage([]byte(message))
+			logger.Info("Received message %v from device %v", message.Pdu, message.Deveui)
+			mqttMessage := MQTT.NewMessage([]byte(message.Pdu))
 			iotfClient.PublishMessage(iotfTopic, mqttMessage)
 		}
 	}()

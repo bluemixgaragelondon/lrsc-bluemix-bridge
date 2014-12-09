@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +14,11 @@ type LrscConnection struct {
 	conn    io.ReadWriteCloser
 	scanner *bufio.Reader
 	dialer  Dialer
+}
+
+type lrscMessage struct {
+	Deveui string
+	Pdu    string
 }
 
 type Dialer interface {
@@ -45,18 +51,24 @@ func CreateTlsDialer(hostname, port string, cert, key []byte) (Dialer, error) {
 	return &TlsDialer{endpoint: endpoint, sslContext: context}, nil
 }
 
-func (self *LrscConnection) StartListening(buffer chan string) {
+func (self *LrscConnection) StartListening(buffer chan lrscMessage) {
 	go func() {
 		self.connect()
 		for {
-			message, err := self.readLine()
+			data, err := self.readLine()
 			if err != nil {
 				logger.Error("read failed (%v)", err)
 				self.connect()
 				continue
 			}
 
-			if len(message) == 0 {
+			if len(data) == 0 {
+				continue
+			}
+
+			message, err := parseLrscJson(data)
+			if err != nil {
+				logger.Error("Invalid message JSON received from LRSC (%v)\nMessage data: (%v)", err, data)
 				continue
 			}
 
@@ -152,9 +164,11 @@ func validateHandshake(handshake string) bool {
 	return true
 }
 
-func (self *LrscConnection) Listen() (chan string, error) {
-	messages := make(chan string)
-	return messages, nil
+func parseLrscJson(data string) (lrscMessage, error) {
+	var message lrscMessage
+	err := json.Unmarshal([]byte(data), &message)
+	logger.Info("Parsed Message: %v", message)
+	return message, err
 }
 
 func (self *LrscConnection) send(message string) error {

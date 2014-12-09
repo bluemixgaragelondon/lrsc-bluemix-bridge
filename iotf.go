@@ -23,7 +23,7 @@ func connectToIotf(iotfCreds map[string]string) *MQTT.MqttClient {
 
 	MQTT.WARN = log.New(os.Stdout, "", 0)
 	MQTT.ERROR = log.New(os.Stdout, "", 0)
-	MQTT.DEBUG = log.New(os.Stdout, "", 0)
+	//MQTT.DEBUG = log.New(os.Stdout, "", 0)
 
 	client := MQTT.NewClient(clientOpts)
 	_, err := client.Start()
