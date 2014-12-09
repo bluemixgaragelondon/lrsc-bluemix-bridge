@@ -64,7 +64,9 @@ func createLogger() clogger.Logger {
 			fmt.Printf("Error: failed to parse remote log target (%v)", err)
 		}
 
-		logger, err = clogger.CreateSyslog(uri.Scheme, uri.Host, "bridge")
+		app := "lrsc-bridge-" + os.Getenv("LRSC_ENV")
+
+		logger, err = clogger.CreateSyslog(uri.Scheme, uri.Host, app)
 		if err != nil {
 			fmt.Printf("Error: failed to initialise remote logger (%v)", err)
 		}
