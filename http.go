@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
-	MQTT "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
 	"net/http"
 	"os"
 )
 
-func setupHttp() {
+func setupHttp(iotf *iotfClient) {
 	http.HandleFunc("/", hello)
 	http.HandleFunc("/env", env)
-	http.HandleFunc("/testpublish", testPublish)
+	http.HandleFunc("/testpublish", func(res http.ResponseWriter, req *http.Request) {
+		testPublish(res, iotf)
+	})
 }
 
 func startHttp() {
@@ -32,8 +33,7 @@ func env(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func testPublish(res http.ResponseWriter, req *http.Request) {
-	message := MQTT.NewMessage([]byte(`{"msg": "Hello world"}`))
-	iotfClient.PublishMessage(iotfTopic, message)
+func testPublish(res http.ResponseWriter, iotf *iotfClient) {
+	iotf.Publish("lrsc-client-test-sensor-1", `{"msg": "Hello world"}`)
 	fmt.Fprintf(res, "done")
 }

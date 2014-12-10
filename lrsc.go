@@ -21,6 +21,14 @@ type lrscMessage struct {
 	Pdu    string
 }
 
+func (self *lrscMessage) toJson() string {
+	json, err := json.Marshal(self)
+	if err != nil {
+		logger.Error("lrscMessage JSON marshaling failed: %v", err.Error())
+	}
+	return string(json)
+}
+
 type Dialer interface {
 	Dial() (io.ReadWriteCloser, error)
 	Endpoint() string
@@ -59,10 +67,6 @@ func (self *LrscConnection) StartListening(buffer chan lrscMessage) {
 			if err != nil {
 				logger.Error("read failed (%v)", err)
 				self.connect()
-				continue
-			}
-
-			if len(data) == 0 {
 				continue
 			}
 
@@ -132,14 +136,8 @@ func (self *LrscConnection) handshake() error {
 		return err
 	}
 
-	hello := `{"msgtag":1,"eui":"FF-00-00-00-00-00-00-00","euidom":0,"major":1,"minor":0,"build":0,"name":"LRSC Client"}`
+	hello := `{"msgtag":1,"eui":"FF-00-00-00-00-00-00-00","euidom":0,"major":1,"minor":0,"build":0,"name":"LRSC Client"}` + "\n\n"
 	err = self.send(hello)
-	if err != nil {
-		logger.Error("handshake failed: " + err.Error())
-		return err
-	}
-
-	err = self.send("\n\n")
 	if err != nil {
 		logger.Error("handshake failed: " + err.Error())
 		return err
@@ -182,12 +180,18 @@ func (self *LrscConnection) send(message string) error {
 }
 
 func (self *LrscConnection) readLine() (string, error) {
-	data, _, err := self.scanner.ReadLine()
-	if err != nil {
-		return "", errors.New("failed to read message")
-		fmt.Println(err)
+	for {
+		data, _, err := self.scanner.ReadLine()
+		if err != nil {
+			return "", errors.New("failed to read message")
+		}
+
+		if len(data) == 0 {
+			continue
+		}
+
+		message := string(data)
+		logger.Debug("<<< " + message)
+		return message, nil
 	}
-	message := string(data)
-	logger.Debug("<<< " + message)
-	return message, nil
 }

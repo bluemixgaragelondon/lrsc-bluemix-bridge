@@ -2,15 +2,11 @@ package main
 
 import (
 	"fmt"
-	MQTT "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
 	"github.com/cromega/clogger"
 	"io/ioutil"
 	"net/url"
 	"os"
 )
-
-var iotfTopic = "iot-2/type/Dummy/id/lrsc-client-test-sensor-1/evt/TEST/fmt/json"
-var iotfClient *MQTT.MqttClient
 
 var logger = createLogger()
 
@@ -36,6 +32,7 @@ func main() {
 	messages := make(chan lrscMessage)
 	lrscConn.StartListening(messages)
 
+	var iotfClient *iotfClient
 	iotfCreds := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
 	iotfClient = connectToIotf(iotfCreds)
 
@@ -43,12 +40,11 @@ func main() {
 		for {
 			message := <-messages
 			logger.Info("Received message %v from device %v", message.Pdu, message.Deveui)
-			mqttMessage := MQTT.NewMessage([]byte(message.Pdu))
-			iotfClient.PublishMessage(iotfTopic, mqttMessage)
+			iotfClient.Publish(message.Deveui, message.toJson())
 		}
 	}()
 
-	setupHttp()
+	setupHttp(iotfClient)
 	startHttp()
 }
 

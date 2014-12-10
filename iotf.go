@@ -10,7 +10,18 @@ import (
 	"time"
 )
 
-func connectToIotf(iotfCreds map[string]string) *MQTT.MqttClient {
+type iotfClient struct {
+	mqttClient *MQTT.MqttClient
+}
+
+func (self *iotfClient) Publish(device, message string) {
+	mqttMessage := MQTT.NewMessage([]byte(message))
+	topic := fmt.Sprintf("iot-2/type/Dummy/id/%v/evt/TEST/fmt/json", device)
+	logger.Info("Publishing '%v' to %v", message, topic)
+	self.mqttClient.PublishMessage(topic, mqttMessage)
+}
+
+func connectToIotf(iotfCreds map[string]string) *iotfClient {
 	clientOpts := MQTT.NewClientOptions()
 	clientOpts.AddBroker(iotfCreds["uri"])
 	clientOpts.SetClientId(fmt.Sprintf("a:%v:$v", iotfCreds["org"], generateClientIdSuffix()))
@@ -25,13 +36,14 @@ func connectToIotf(iotfCreds map[string]string) *MQTT.MqttClient {
 	MQTT.ERROR = log.New(os.Stdout, "", 0)
 	//MQTT.DEBUG = log.New(os.Stdout, "", 0)
 
-	client := MQTT.NewClient(clientOpts)
-	_, err := client.Start()
+	mqttClient := MQTT.NewClient(clientOpts)
+	_, err := mqttClient.Start()
 	if err != nil {
 		logger.Error(err.Error())
 	}
 
-	return client
+	iotfClient := &iotfClient{mqttClient: mqttClient}
+	return iotfClient
 }
 
 func generateClientIdSuffix() string {

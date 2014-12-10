@@ -51,17 +51,17 @@ func TestReceiveMessage(t *testing.T) {
 
 	mockConn := &MockConnection{
 		readFunc: func() (string, error) {
-			return "response\n", nil
+			return `{"deveui": "id", "pdu": "data"}` + "\n", nil
 		},
 		writeFunc: func(string) error {
 			return nil
 		}}
 	testDialer := &TestDialer{conn: mockConn}
 	lrscConn := &LrscConnection{dialer: testDialer}
-	messages := make(chan string)
+	messages := make(chan lrscMessage)
 
 	lrscConn.StartListening(messages)
-	Expect(<-messages).To(Equal("response"))
+	Expect(<-messages).To(Equal(lrscMessage{Deveui: "id", Pdu: "data"}))
 }
 
 func TestReconnect(t *testing.T) {
@@ -76,7 +76,7 @@ func TestReconnect(t *testing.T) {
 				count += 1
 				return "", errors.New("EOF")
 			} else {
-				return "response\n", nil
+				return "{}\n", nil
 			}
 		},
 		writeFunc: func(message string) error {
@@ -88,9 +88,9 @@ func TestReconnect(t *testing.T) {
 
 	testDialer := &TestDialer{conn: mockConn}
 	lrscConn := &LrscConnection{dialer: testDialer}
-	messages := make(chan string)
+	messages := make(chan lrscMessage)
 
 	lrscConn.StartListening(messages)
-	Expect(<-messages).To(Equal("response"))
+	<-messages
 	Expect(connectionAttempts).To(Equal(2))
 }
