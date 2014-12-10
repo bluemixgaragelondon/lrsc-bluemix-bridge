@@ -1,7 +1,6 @@
 inherit: manifest.yml
-applications:
-- name: lrsc-bridge-test
-  host: lrsc-bridge-test
-  env:
-    REMOTE_LOG_URL: udp://logs2.papertrailapp.com:45777
-    LRSC_ENV: test
+name: lrsc-bridge-test
+host: lrsc-bridge-test
+env:
+  REMOTE_LOG_URL: udp://logs2.papertrailapp.com:45777
+  LRSC_ENV: test

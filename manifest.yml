@@ -4,9 +4,8 @@ command: lrsc-bridge
 env:
   CLIENT_CERT: client.cert
   CLIENT_KEY: client.key
-applications:
-- name: lrsc-bridge-dev
-  host: lrsc-bridge-dev
-  env:
-    REMOTE_LOG_URL: udp://logs2.papertrailapp.com:45777
-    LRSC_ENV: dev
+  REMOTE_LOG_URL: udp://logs2.papertrailapp.com:45777
+  LRSC_ENV: dev
+name: lrsc-bridge-dev
+host: lrsc-bridge-dev
+
