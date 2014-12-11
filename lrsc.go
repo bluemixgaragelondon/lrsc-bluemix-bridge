@@ -108,6 +108,7 @@ func (self *LrscConnection) establish() error {
 		self.conn.Close()
 	}
 
+	logger.Debug("Attempting TCP connection")
 	conn, err := self.dialer.Dial()
 
 	if err != nil {

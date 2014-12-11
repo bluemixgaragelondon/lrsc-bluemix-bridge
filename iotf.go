@@ -47,7 +47,7 @@ type iotfCredentials struct {
 	MqttUnsecurePort int    `json:"mqtt_u_port"`
 }
 
-func CreateIotfClient(creds iotfCredentials, deviceType string) *iotfClient {
+func CreateIotfClient(creds iotfCredentials, deviceType string) (*iotfClient, error) {
 
 	clientOpts := MQTT.NewClientOptions()
 	clientOpts.AddBroker(fmt.Sprintf("tls://%v:%v", creds.MqttHost, creds.MqttSecurePort))
@@ -66,15 +66,14 @@ func CreateIotfClient(creds iotfCredentials, deviceType string) *iotfClient {
 	mqtt := MQTT.NewClient(clientOpts)
 	_, err := mqtt.Start()
 	if err != nil {
-		logger.Fatal(err.Error())
-		panic(err)
+		return nil, errors.New("Could not establish MQTT connection: " + err.Error())
 	}
 
 	devicesSeen := make(map[string]struct{})
 
 	broker := &mqttClient{credentials: creds, deviceType: deviceType, mqtt: mqtt}
 	registrar := &iotfRegistrar{credentials: creds, deviceType: deviceType}
-	return &iotfClient{DevicesSeen: devicesSeen, broker: broker, registrar: registrar}
+	return &iotfClient{DevicesSeen: devicesSeen, broker: broker, registrar: registrar}, nil
 }
 
 func (self *iotfClient) Publish(device, message string) {

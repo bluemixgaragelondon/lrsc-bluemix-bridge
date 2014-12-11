@@ -11,16 +11,28 @@ import (
 var logger = createLogger()
 
 func main() {
+	logger.Info("================ LRSC <-> IoTF bridge launched  ==================")
+
 	cert, err := ioutil.ReadFile(os.Getenv("LRSC_CLIENT_CERT"))
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Fatal(err.Error())
 		panic(err)
 	}
 	key, err := ioutil.ReadFile(os.Getenv("LRSC_CLIENT_KEY"))
 	if err != nil {
-		logger.Error(err.Error())
+		logger.Fatal(err.Error())
 		panic(err)
 	}
+
+	logger.Info("Starting IoTF connection")
+	var iotfClient *iotfClient
+	iotfCreds := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
+	iotfClient, err = CreateIotfClient(iotfCreds, "LRSC")
+	if err != nil {
+		logger.Fatal(err.Error())
+		panic(err)
+	}
+	logger.Info("Established IoTF connection")
 
 	dialer, err := CreateTlsDialer(os.Getenv("LRSC_HOST"), os.Getenv("LRSC_PORT"), cert, key)
 	if err != nil {
@@ -30,11 +42,9 @@ func main() {
 
 	lrscConn := &LrscConnection{dialer: dialer}
 	messages := make(chan lrscMessage)
-	lrscConn.StartListening(messages)
 
-	var iotfClient *iotfClient
-	iotfCreds := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
-	iotfClient = CreateIotfClient(iotfCreds, "LRSC")
+	logger.Info("Starting LRSC connection")
+	lrscConn.StartListening(messages)
 
 	go func() {
 		for {
