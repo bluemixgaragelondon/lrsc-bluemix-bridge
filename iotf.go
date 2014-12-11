@@ -6,10 +6,8 @@ import (
 	"fmt"
 	MQTT "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 )
@@ -61,8 +59,8 @@ func CreateIotfClient(creds iotfCredentials, deviceType string) *iotfClient {
 		logger.Error("IoTF connection lost handler called: " + err.Error())
 	})
 
-	MQTT.WARN = log.New(os.Stdout, "", 0)
-	MQTT.ERROR = log.New(os.Stdout, "", 0)
+	//MQTT.WARN = log.New(os.Stdout, "", 0)
+	//MQTT.ERROR = log.New(os.Stdout, "", 0)
 	//MQTT.DEBUG = log.New(os.Stdout, "", 0)
 
 	mqtt := MQTT.NewClient(clientOpts)
