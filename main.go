@@ -11,18 +11,18 @@ import (
 var logger = createLogger()
 
 func main() {
-	cert, err := ioutil.ReadFile(os.Getenv("CLIENT_CERT"))
+	cert, err := ioutil.ReadFile(os.Getenv("LRSC_CLIENT_CERT"))
 	if err != nil {
 		logger.Error(err.Error())
 		panic(err)
 	}
-	key, err := ioutil.ReadFile(os.Getenv("CLIENT_KEY"))
+	key, err := ioutil.ReadFile(os.Getenv("LRSC_CLIENT_KEY"))
 	if err != nil {
 		logger.Error(err.Error())
 		panic(err)
 	}
 
-	dialer, err := CreateTlsDialer("dev.lrsc.ch", "55055", cert, key)
+	dialer, err := CreateTlsDialer(os.Getenv("LRSC_HOST"), os.Getenv("LRSC_PORT"), cert, key)
 	if err != nil {
 		logger.Error(err.Error())
 		panic(err)
