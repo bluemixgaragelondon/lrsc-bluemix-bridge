@@ -34,7 +34,7 @@ func main() {
 
 	var iotfClient *iotfClient
 	iotfCreds := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
-	iotfClient = connectToIotf(iotfCreds, "LRSC")
+	iotfClient = CreateIotfClient(iotfCreds, "LRSC")
 
 	go func() {
 		for {
