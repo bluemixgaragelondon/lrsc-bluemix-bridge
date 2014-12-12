@@ -22,12 +22,12 @@ type DeviceRegistrar interface {
 
 type mqttClient struct {
 	mqtt        *MQTT.MqttClient
-	credentials iotfCredentials
+	credentials *iotfCredentials
 	deviceType  string
 }
 
 type iotfRegistrar struct {
-	credentials iotfCredentials
+	credentials *iotfCredentials
 	deviceType  string
 }
 
@@ -47,7 +47,7 @@ type iotfCredentials struct {
 	MqttUnsecurePort int    `json:"mqtt_u_port"`
 }
 
-func CreateIotfClient(creds iotfCredentials, deviceType string) (*iotfClient, error) {
+func CreateIotfClient(creds *iotfCredentials, deviceType string) (*iotfClient, error) {
 
 	clientOpts := MQTT.NewClientOptions()
 	clientOpts.AddBroker(fmt.Sprintf("tls://%v:%v", creds.MqttHost, creds.MqttSecurePort))
@@ -147,7 +147,7 @@ func generateClientIdSuffix() string {
 	return string(suffix)
 }
 
-func extractIotfCreds(services string) iotfCredentials {
+func extractIotfCreds(services string) (*iotfCredentials, error) {
 	data := struct {
 		Services []struct {
 			Credentials iotfCredentials
@@ -156,8 +156,12 @@ func extractIotfCreds(services string) iotfCredentials {
 
 	err := json.Unmarshal([]byte(services), &data)
 	if err != nil {
-		logger.Error(fmt.Sprintf("%v (probably missing configuration)", err))
+		return nil, fmt.Errorf("Could not parse services JSON: %v", err)
 	}
 
-	return data.Services[0].Credentials
+	if len(data.Services) == 0 {
+		return nil, errors.New("Could not find any iotf-service instance bound")
+	}
+
+	return &data.Services[0].Credentials, nil
 }

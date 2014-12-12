@@ -26,7 +26,11 @@ func main() {
 
 	logger.Info("Starting IoTF connection")
 	var iotfClient *iotfClient
-	iotfCreds := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
+	iotfCreds, err := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
+	if err != nil {
+		logger.Fatal(err.Error())
+		panic(err)
+	}
 	iotfClient, err = CreateIotfClient(iotfCreds, "LRSC")
 	if err != nil {
 		logger.Fatal(err.Error())

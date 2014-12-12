@@ -1,18 +1,36 @@
 package main
 
 import (
-	"fmt"
 	. "github.com/onsi/gomega"
 	"testing"
 )
 
-func Test_IoTF_CredentialsCanBeExtracted(test *testing.T) {
+func Test_IoTF_ValidCredentialsCanBeExtracted(test *testing.T) {
 	RegisterTestingT(test)
 
 	vcapServices := `{"iotf-service":[{"name":"iotf","label":"iotf-service","tags":["internet_of_things","ibm_created"],"plan":"iotf-service-free","credentials":{"iotCredentialsIdentifier":"a2g6k39sl6r5","mqtt_host":"br2ybi.messaging.internetofthings.ibmcloud.com","mqtt_u_port":1883,"mqtt_s_port":8883,"base_uri":"https://internetofthings.ibmcloud.com:443/api/v0001","org":"br2ybi","apiKey":"a-br2ybi-y0tc7vicym","apiToken":"AJIpvsdJ!a__nqR(TK"}}]}`
-	creds := extractIotfCreds(vcapServices)
-	fmt.Printf("%v", creds)
+
+	creds, err := extractIotfCreds(vcapServices)
+	Expect(err).NotTo(HaveOccurred())
 	Expect(creds.User).To(Equal("a-br2ybi-y0tc7vicym"))
+}
+
+func Test_IoTF_EmptyVcapServicesProducesError(test *testing.T) {
+	RegisterTestingT(test)
+
+	vcapServices := "{}"
+
+	_, err := extractIotfCreds(vcapServices)
+	Expect(err).To(HaveOccurred())
+}
+
+func Test_IoTF_WrongServiceInVcapServicesProducesError(test *testing.T) {
+	RegisterTestingT(test)
+
+	vcapServices := `{"other-service":[{"credentials":{}}]}`
+
+	_, err := extractIotfCreds(vcapServices)
+	Expect(err).To(HaveOccurred())
 }
 
 func Test_IoTF_Publish_RegistersNewDevice(test *testing.T) {
