@@ -29,6 +29,7 @@ func TestValidateHandshake(t *testing.T) {
 type MockConnection struct {
 	readFunc  func() (string, error)
 	writeFunc func(string) error
+	StatusReporter
 }
 
 func (self *MockConnection) Read(b []byte) (n int, err error) {
@@ -56,11 +57,14 @@ func TestReceiveMessage(t *testing.T) {
 		writeFunc: func(string) error {
 			return nil
 		}}
+
 	testDialer := &TestDialer{conn: mockConn}
-	lrscConn := &LrscConnection{dialer: testDialer}
+	lrscClient := &LrscConnection{dialer: testDialer}
+	lrscClient.status = make(map[string]string)
+
 	messages := make(chan lrscMessage)
 
-	lrscConn.StartListening(messages)
+	lrscClient.StartListening(messages)
 	Expect(<-messages).To(Equal(lrscMessage{Deveui: "id", Pdu: "data"}))
 }
 
@@ -87,10 +91,12 @@ func TestReconnect(t *testing.T) {
 		}}
 
 	testDialer := &TestDialer{conn: mockConn}
-	lrscConn := &LrscConnection{dialer: testDialer}
+	lrscClient := &LrscConnection{dialer: testDialer}
+	lrscClient.status = make(map[string]string)
+
 	messages := make(chan lrscMessage)
 
-	lrscConn.StartListening(messages)
+	lrscClient.StartListening(messages)
 	<-messages
 	Expect(connectionAttempts).To(Equal(2))
 }

@@ -52,12 +52,24 @@ func Test_IoTF_Publish_DoesNotRegisterNewItemIfDeviceExist(test *testing.T) {
 	Expect(len(client.DevicesSeen)).To(Equal(1))
 }
 
-func createMockIotfClient() *iotfClient {
+func Test_IoTF_Connect_CreatesSuccessfulStatus(test *testing.T) {
+	RegisterTestingT(test)
+
+	client := createMockIotfClient()
+	_ = client.Connect()
+	Expect(client.status["CONNECTION"]).To(Equal("OK"))
+}
+
+func createMockIotfClient() iotfConnection {
 	devicesSeen := make(map[string]struct{})
-	return &iotfClient{DevicesSeen: devicesSeen, broker: &mockBroker{}, registrar: &mockRegistrar{}}
+	return iotfConnection{StatusReporter: StatusReporter{status: make(map[string]string)}, DevicesSeen: devicesSeen, brokerClient: &mockBroker{}, registrar: &mockRegistrar{}}
 }
 
 type mockBroker struct {
+}
+
+func (*mockBroker) Connect() error {
+	return nil
 }
 
 func (*mockBroker) Publish(device, message string) {

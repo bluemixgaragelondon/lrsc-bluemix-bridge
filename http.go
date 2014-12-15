@@ -6,12 +6,12 @@ import (
 	"os"
 )
 
-func setupHttp(iotf *iotfClient) {
+func setupHttp() {
 	http.HandleFunc("/", hello)
 	http.HandleFunc("/env", env)
-	http.HandleFunc("/testpublish", func(res http.ResponseWriter, req *http.Request) {
-		testPublish(res, iotf)
-	})
+	http.HandleFunc("/testpublish", testPublish)
+	http.HandleFunc("/iotfStatus", iotfStatus)
+	http.HandleFunc("/lrscStatus", lrscStatus)
 }
 
 func startHttp() {
@@ -33,7 +33,15 @@ func env(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func testPublish(res http.ResponseWriter, iotf *iotfClient) {
-	iotf.Publish("lrsc-client-test-sensor-1", `{"msg": "Hello world"}`)
+func testPublish(res http.ResponseWriter, req *http.Request) {
+	iotfClient.Publish("lrsc-client-test-sensor-1", `{"msg": "Hello world"}`)
 	fmt.Fprintf(res, "done")
+}
+
+func iotfStatus(res http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(res, "%v", iotfClient.Status())
+}
+
+func lrscStatus(res http.ResponseWriter, req *http.Request) {
+	fmt.Fprintf(res, "%v", lrscClient.Status())
 }

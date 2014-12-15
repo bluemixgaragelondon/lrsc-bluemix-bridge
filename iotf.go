@@ -12,7 +12,8 @@ import (
 	"time"
 )
 
-type BrokerClient interface {
+type BrokerConnection interface {
+	Connect() error
 	Publish(topic, message string)
 }
 
@@ -20,7 +21,7 @@ type DeviceRegistrar interface {
 	RegisterDevice(deviceId string) (bool, error)
 }
 
-type mqttClient struct {
+type mqttConnection struct {
 	mqtt        *MQTT.MqttClient
 	credentials *iotfCredentials
 	deviceType  string
@@ -31,10 +32,11 @@ type iotfRegistrar struct {
 	deviceType  string
 }
 
-type iotfClient struct {
-	DevicesSeen map[string]struct{}
-	broker      BrokerClient
-	registrar   DeviceRegistrar
+type iotfConnection struct {
+	DevicesSeen  map[string]struct{}
+	brokerClient BrokerConnection
+	registrar    DeviceRegistrar
+	StatusReporter
 }
 
 type iotfCredentials struct {
@@ -47,36 +49,24 @@ type iotfCredentials struct {
 	MqttUnsecurePort int    `json:"mqtt_u_port"`
 }
 
-func CreateIotfClient(creds *iotfCredentials, deviceType string) (*iotfClient, error) {
-
-	clientOpts := MQTT.NewClientOptions()
-	clientOpts.AddBroker(fmt.Sprintf("tls://%v:%v", creds.MqttHost, creds.MqttSecurePort))
-	clientOpts.SetClientId(fmt.Sprintf("a:%v:$v", creds.Org, generateClientIdSuffix()))
-	clientOpts.SetUsername(creds.User)
-	clientOpts.SetPassword(creds.Password)
-
-	clientOpts.SetOnConnectionLost(func(client *MQTT.MqttClient, err error) {
-		logger.Error("IoTF connection lost handler called: " + err.Error())
-	})
-
-	//MQTT.WARN = log.New(os.Stdout, "", 0)
-	//MQTT.ERROR = log.New(os.Stdout, "", 0)
-	//MQTT.DEBUG = log.New(os.Stdout, "", 0)
-
-	mqtt := MQTT.NewClient(clientOpts)
-	_, err := mqtt.Start()
-	if err != nil {
-		return nil, errors.New("Could not establish MQTT connection: " + err.Error())
-	}
-
-	devicesSeen := make(map[string]struct{})
-
-	broker := &mqttClient{credentials: creds, deviceType: deviceType, mqtt: mqtt}
-	registrar := &iotfRegistrar{credentials: creds, deviceType: deviceType}
-	return &iotfClient{DevicesSeen: devicesSeen, broker: broker, registrar: registrar}, nil
+func (self *iotfConnection) Initialise(creds *iotfCredentials, deviceType string) {
+	self.status = make(map[string]string)
+	self.DevicesSeen = make(map[string]struct{})
+	self.brokerClient = &mqttConnection{credentials: creds, deviceType: deviceType}
+	self.registrar = &iotfRegistrar{credentials: creds, deviceType: deviceType}
 }
 
-func (self *iotfClient) Publish(device, message string) {
+func (self *iotfConnection) Connect() error {
+	err := self.brokerClient.Connect()
+	if err != nil {
+		self.Report("CONNECTION", err.Error())
+	} else {
+		self.Report("CONNECTION", "OK")
+	}
+	return err
+}
+
+func (self *iotfConnection) Publish(device, message string) {
 	if _, deviceFound := self.DevicesSeen[device]; deviceFound == false {
 		newDevice, err := self.registrar.RegisterDevice(device)
 		if newDevice {
@@ -86,7 +76,7 @@ func (self *iotfClient) Publish(device, message string) {
 			logger.Error("Could not register device: " + err.Error())
 		}
 	}
-	self.broker.Publish(device, message)
+	self.brokerClient.Publish(device, message)
 }
 
 func (self *iotfRegistrar) RegisterDevice(device string) (bool, error) {
@@ -134,7 +124,30 @@ func parseErrorFromIotf(body []byte) string {
 	return parsedResponse.Message
 }
 
-func (self *mqttClient) Publish(device, message string) {
+func (self *mqttConnection) Connect() error {
+	clientOpts := MQTT.NewClientOptions()
+	clientOpts.AddBroker(fmt.Sprintf("tls://%v:%v", self.credentials.MqttHost, self.credentials.MqttSecurePort))
+	clientOpts.SetClientId(fmt.Sprintf("a:%v:$v", self.credentials.Org, generateClientIdSuffix()))
+	clientOpts.SetUsername(self.credentials.User)
+	clientOpts.SetPassword(self.credentials.Password)
+
+	clientOpts.SetOnConnectionLost(func(client *MQTT.MqttClient, err error) {
+		logger.Error("IoTF connection lost handler called: " + err.Error())
+	})
+
+	//MQTT.WARN = log.New(os.Stdout, "", 0)
+	//MQTT.ERROR = log.New(os.Stdout, "", 0)
+	//MQTT.DEBUG = log.New(os.Stdout, "", 0)
+
+	self.mqtt = MQTT.NewClient(clientOpts)
+	_, err := self.mqtt.Start()
+	if err != nil {
+		return errors.New("Could not establish MQTT connection: " + err.Error())
+	}
+	return nil
+}
+
+func (self *mqttConnection) Publish(device, message string) {
 	mqttMessage := MQTT.NewMessage([]byte(message))
 	topic := fmt.Sprintf("iot-2/type/%v/id/%v/evt/TEST/fmt/json", self.deviceType, device)
 	logger.Info("Publishing '%v' to %v", message, topic)

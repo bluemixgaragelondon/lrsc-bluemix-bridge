@@ -14,6 +14,7 @@ type LrscConnection struct {
 	conn    io.ReadWriteCloser
 	scanner *bufio.Reader
 	dialer  Dialer
+	StatusReporter
 }
 
 type lrscMessage struct {
@@ -37,6 +38,7 @@ type Dialer interface {
 type TlsDialer struct {
 	endpoint   string
 	sslContext *tls.Config
+	reporter   *StatusReporter
 }
 
 func (self *TlsDialer) Dial() (io.ReadWriteCloser, error) {
@@ -47,7 +49,7 @@ func (self *TlsDialer) Endpoint() string {
 	return self.endpoint
 }
 
-func CreateTlsDialer(hostname, port string, cert, key []byte) (Dialer, error) {
+func CreateTlsDialer(hostname, port string, cert, key []byte, reporter *StatusReporter) (Dialer, error) {
 	context := &tls.Config{InsecureSkipVerify: true}
 	certificate, err := tls.X509KeyPair(cert, key)
 	if err != nil {
@@ -56,7 +58,7 @@ func CreateTlsDialer(hostname, port string, cert, key []byte) (Dialer, error) {
 
 	context.Certificates = []tls.Certificate{certificate}
 	endpoint := fmt.Sprintf("%v:%v", hostname, port)
-	return &TlsDialer{endpoint: endpoint, sslContext: context}, nil
+	return &TlsDialer{endpoint: endpoint, sslContext: context, reporter: reporter}, nil
 }
 
 func (self *LrscConnection) StartListening(buffer chan lrscMessage) {
@@ -126,6 +128,8 @@ func (self *LrscConnection) establish() error {
 		logger.Error("Could not perform handshake: " + err.Error())
 		return err
 	}
+
+	self.Report("connection_status", "ok")
 
 	return nil
 }
