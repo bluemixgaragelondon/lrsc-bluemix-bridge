@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/cromega/clogger"
-	"io/ioutil"
 	"net/url"
 	"os"
 )
@@ -15,37 +14,41 @@ var iotfClient iotfConnection
 func main() {
 	logger.Info("================ LRSC <-> IoTF bridge launched  ==================")
 
-	cert, err := ioutil.ReadFile(os.Getenv("LRSC_CLIENT_CERT"))
+	err := startBridge()
 	if err != nil {
 		logger.Fatal(err.Error())
-		panic(err)
-	}
-	key, err := ioutil.ReadFile(os.Getenv("LRSC_CLIENT_KEY"))
-	if err != nil {
-		logger.Fatal(err.Error())
-		panic(err)
 	}
 
+	setupHttp()
+	startHttp()
+}
+
+func startBridge() error {
 	logger.Info("Starting IoTF connection")
 	iotfCreds, err := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
 	if err != nil {
-		logger.Fatal(err.Error())
-		panic(err)
+		iotfClient.Report("CONNECTION", err.Error())
+		return err
 	}
 	iotfClient.Initialise(iotfCreds, "LRSC")
 	err = iotfClient.Connect()
 	if err != nil {
-		logger.Fatal(err.Error())
-		panic(err)
+		iotfClient.Report("CONNECTION", err.Error())
 	}
+	iotfClient.Report("CONNECTION", "OK")
 	logger.Info("Established IoTF connection")
 
 	lrscClient.status = make(map[string]string)
-
-	dialer, err := CreateTlsDialer(os.Getenv("LRSC_HOST"), os.Getenv("LRSC_PORT"), cert, key, &lrscClient.StatusReporter)
+	dialerConfig := dialerConfig{
+		host: os.Getenv("LRSC_HOST"),
+		port: os.Getenv("LRSC_PORT"),
+		cert: os.Getenv("LRSC_CLIENT_CERT"),
+		key:  os.Getenv("LRSC_CLIENT_KEY"),
+	}
+	dialer, err := CreateTlsDialer(dialerConfig, &lrscClient.StatusReporter)
 	if err != nil {
-		logger.Error(err.Error())
-		panic(err)
+		lrscClient.Report("CONNECTION", err.Error())
+		return err
 	}
 
 	lrscClient.dialer = dialer
@@ -61,9 +64,7 @@ func main() {
 			iotfClient.Publish(message.Deveui, message.toJson())
 		}
 	}()
-
-	setupHttp()
-	startHttp()
+	return nil
 }
 
 func createLogger() clogger.Logger {

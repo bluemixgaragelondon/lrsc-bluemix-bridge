@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"time"
 )
 
@@ -41,6 +42,10 @@ type TlsDialer struct {
 	reporter   *StatusReporter
 }
 
+type dialerConfig struct {
+	host, port, cert, key string
+}
+
 func (self *TlsDialer) Dial() (io.ReadWriteCloser, error) {
 	return tls.Dial("tcp", self.endpoint, self.sslContext)
 }
@@ -49,7 +54,16 @@ func (self *TlsDialer) Endpoint() string {
 	return self.endpoint
 }
 
-func CreateTlsDialer(hostname, port string, cert, key []byte, reporter *StatusReporter) (Dialer, error) {
+func CreateTlsDialer(config dialerConfig, reporter *StatusReporter) (Dialer, error) {
+	cert, err := ioutil.ReadFile(config.cert)
+	if err != nil {
+		return nil, fmt.Errorf("Could not read client certificate: %v", err)
+	}
+	key, err := ioutil.ReadFile(config.key)
+	if err != nil {
+		return nil, fmt.Errorf("Could not read client key: %v", err)
+	}
+
 	context := &tls.Config{InsecureSkipVerify: true}
 	certificate, err := tls.X509KeyPair(cert, key)
 	if err != nil {
@@ -57,7 +71,7 @@ func CreateTlsDialer(hostname, port string, cert, key []byte, reporter *StatusRe
 	}
 
 	context.Certificates = []tls.Certificate{certificate}
-	endpoint := fmt.Sprintf("%v:%v", hostname, port)
+	endpoint := fmt.Sprintf("%v:%v", config.host, config.port)
 	return &TlsDialer{endpoint: endpoint, sslContext: context, reporter: reporter}, nil
 }
 
@@ -67,6 +81,7 @@ func (self *LrscConnection) StartListening(buffer chan lrscMessage) {
 		for {
 			data, err := self.readLine()
 			if err != nil {
+				self.Report("CONNECTION", "Connection lost")
 				logger.Error("read failed (%v)", err)
 				self.connect()
 				continue
@@ -100,6 +115,7 @@ func (self *LrscConnection) connect() {
 			logger.Info(fmt.Sprintf("Connecting in %v seconds", timeout))
 			time.Sleep(timeout)
 		} else {
+			self.Report("CONNECTION", "Connection established")
 			break
 		}
 	}
@@ -128,8 +144,6 @@ func (self *LrscConnection) establish() error {
 		logger.Error("Could not perform handshake: " + err.Error())
 		return err
 	}
-
-	self.Report("connection_status", "ok")
 
 	return nil
 }

@@ -58,11 +58,6 @@ func (self *iotfConnection) Initialise(creds *iotfCredentials, deviceType string
 
 func (self *iotfConnection) Connect() error {
 	err := self.brokerClient.Connect()
-	if err != nil {
-		self.Report("CONNECTION", err.Error())
-	} else {
-		self.Report("CONNECTION", "OK")
-	}
 	return err
 }
 
