@@ -33,9 +33,8 @@ func startBridge() error {
 	iotfClient.Initialise(iotfCreds, "LRSC")
 	err = iotfClient.Connect()
 	if err != nil {
-		iotfClient.Report("CONNECTION", err.Error())
+		return err
 	}
-	iotfClient.Report("CONNECTION", "OK")
 	logger.Info("Established IoTF connection")
 
 	lrscClient.status = make(map[string]string)
@@ -57,14 +56,16 @@ func startBridge() error {
 	logger.Info("Starting LRSC connection")
 	lrscClient.StartListening(messages)
 
-	go func() {
-		for {
-			message := <-messages
-			logger.Info("Received message %v from device %v", message.Pdu, message.Deveui)
-			iotfClient.Publish(message.Deveui, message.toJson())
-		}
-	}()
+	go listenForMessages(messages)
 	return nil
+}
+
+func listenForMessages(messages chan lrscMessage) {
+	for {
+		message := <-messages
+		logger.Info("Received message %v from device %v", message.Pdu, message.Deveui)
+		iotfClient.Publish(message.Deveui, message.toJson())
+	}
 }
 
 func createLogger() clogger.Logger {

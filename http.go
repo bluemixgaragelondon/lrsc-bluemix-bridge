@@ -7,7 +7,6 @@ import (
 )
 
 func setupHttp() {
-	http.HandleFunc("/", hello)
 	http.HandleFunc("/env", env)
 	http.HandleFunc("/testpublish", testPublish)
 	http.HandleFunc("/iotfStatus", iotfStatus)
@@ -20,10 +19,6 @@ func startHttp() {
 		logger.Error(err.Error())
 		panic(err)
 	}
-}
-
-func hello(res http.ResponseWriter, req *http.Request) {
-	fmt.Fprintln(res, "hello, world")
 }
 
 func env(res http.ResponseWriter, req *http.Request) {

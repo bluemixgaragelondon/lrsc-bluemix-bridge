@@ -42,6 +42,15 @@ func Test_IoTF_Publish_RegistersNewDevice(test *testing.T) {
 	Expect(len(client.DevicesSeen)).To(Equal(1))
 }
 
+func Test_IoTF_Publish_ReportsNewDevice(test *testing.T) {
+	RegisterTestingT(test)
+
+	client := createMockIotfClient()
+	newDevice := "test"
+	client.Publish(newDevice, "Hello world")
+	Expect(client.status["DEVICES_SEEN"]).To(Equal("1"))
+}
+
 func Test_IoTF_Publish_DoesNotRegisterNewItemIfDeviceExist(test *testing.T) {
 	RegisterTestingT(test)
 

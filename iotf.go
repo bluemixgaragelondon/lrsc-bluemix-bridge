@@ -58,6 +58,11 @@ func (self *iotfConnection) Initialise(creds *iotfCredentials, deviceType string
 
 func (self *iotfConnection) Connect() error {
 	err := self.brokerClient.Connect()
+	if err != nil {
+		self.Report("CONNECTION", err.Error())
+	} else {
+		self.Report("CONNECTION", "OK")
+	}
 	return err
 }
 
@@ -66,6 +71,7 @@ func (self *iotfConnection) Publish(device, message string) {
 		newDevice, err := self.registrar.RegisterDevice(device)
 		if newDevice {
 			self.DevicesSeen[device] = struct{}{}
+			self.Report("DEVICES_SEEN", fmt.Sprintf("%v", len(self.DevicesSeen)))
 		}
 		if err != nil {
 			logger.Error("Could not register device: " + err.Error())
