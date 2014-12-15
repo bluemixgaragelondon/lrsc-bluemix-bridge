@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <head>
+    <title>LRSC &lt;-&gt; IoTF Status</title>
+    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <script>
+      fetchAndPrintTable("lrscStatus", "lrsc");
+      fetchAndPrintTable("iotfStatus", "iotf");
+      
+      function fetchAndPrintTable(endpoint, tableId) {
+        $.get(endpoint, function( data ) {
+          for (var x in data) {
+            $( "#"+tableId ).append("<tr><td>"+x+"</td><td>"+data[x]+"</td></tr>");
+          }
+        });
+      }
+    </script>
+    <style>
+      body {
+        margin: 5em;
+        font-family: sans-serif;
+        color: #444;
+      }
+      h1 {
+        text-align: center;
+        margin: 1em;
+      }
+      div {
+        float: left;
+        width: 50%;
+      }
+      table {
+        border-collapse: collapse;
+      }
+      td, th {
+        border: 2px solid #aaa;
+        padding: 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>LRSC &lt;-&gt; IoTF Status</h1>
+    <div>
+      <h2>LRSC Status</h2>
+      <table id="lrsc">
+        <tr><th>Metric</th><th>Value</th></tr>
+      </table>
+    </div>
+    <div>
+      <h2>IoTF Status</h2>
+      <table id="iotf">
+        <tr><th>Metric</th><th>Value</th></tr>
+      </table>
+    </div>
+   </body>
+ </html>
+

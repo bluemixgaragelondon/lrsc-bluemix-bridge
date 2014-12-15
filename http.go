@@ -7,6 +7,9 @@ import (
 )
 
 func setupHttp() {
+	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
+		http.ServeFile(res, req, "status.html")
+	})
 	http.HandleFunc("/env", env)
 	http.HandleFunc("/testpublish", testPublish)
 	http.HandleFunc("/iotfStatus", iotfStatus)
@@ -34,9 +37,11 @@ func testPublish(res http.ResponseWriter, req *http.Request) {
 }
 
 func iotfStatus(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(res, "%v", iotfClient.Status())
 }
 
 func lrscStatus(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(res, "%v", lrscClient.Status())
 }
