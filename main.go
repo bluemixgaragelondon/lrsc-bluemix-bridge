@@ -57,10 +57,9 @@ func startBridge() error {
 	}
 
 	lrscClient.dialer = dialer
-	messages := make(chan lrscMessage)
 
 	logger.Info("Starting LRSC connection")
-	lrscClient.StartListening(messages)
+	messages := lrscClient.StartListening()
 
 	go listenForMessages(messages)
 	return nil
@@ -70,9 +69,8 @@ func setupReporting(reporter *StatusReporter) {
 	reporter.status = make(map[string]string)
 }
 
-func listenForMessages(messages chan lrscMessage) {
-	for {
-		message := <-messages
+func listenForMessages(messages <-chan lrscMessage) {
+	for message := range messages {
 		logger.Info("Received message %v from device %v", message.Pdu, message.Deveui)
 		iotfClient.Publish(message.Deveui, message.toJson())
 	}

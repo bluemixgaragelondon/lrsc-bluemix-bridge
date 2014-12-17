@@ -75,7 +75,8 @@ func CreateTlsDialer(config dialerConfig, reporter *StatusReporter) (Dialer, err
 	return &TlsDialer{endpoint: endpoint, sslContext: context, reporter: reporter}, nil
 }
 
-func (self *LrscConnection) StartListening(buffer chan lrscMessage) {
+func (self *LrscConnection) StartListening() <-chan lrscMessage {
+	buffer := make(chan lrscMessage)
 	go func() {
 		self.connect()
 		for {
@@ -96,6 +97,7 @@ func (self *LrscConnection) StartListening(buffer chan lrscMessage) {
 			buffer <- message
 		}
 	}()
+	return buffer
 }
 
 func (self *LrscConnection) Close() {

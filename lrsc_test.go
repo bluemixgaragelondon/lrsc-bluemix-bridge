@@ -73,9 +73,7 @@ func Test_LRSC_CanReceiveMessage(t *testing.T) {
 	lrscClient := &LrscConnection{dialer: testDialer}
 	setupReporting(&lrscClient.StatusReporter)
 
-	messages := make(chan lrscMessage)
-
-	lrscClient.StartListening(messages)
+	messages := lrscClient.StartListening()
 	Expect(<-messages).To(Equal(lrscMessage{Deveui: "id", Pdu: "data"}))
 }
 
@@ -105,9 +103,7 @@ func Test_LRSC_Reconnects(t *testing.T) {
 	lrscClient := &LrscConnection{dialer: testDialer}
 	setupReporting(&lrscClient.StatusReporter)
 
-	messages := make(chan lrscMessage)
-
-	lrscClient.StartListening(messages)
+	messages := lrscClient.StartListening()
 	<-messages
 	Expect(connectionAttempts).To(Equal(2))
 }
