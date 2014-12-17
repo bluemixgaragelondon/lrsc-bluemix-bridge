@@ -9,6 +9,7 @@
 
       function fetchAndPrintTable(endpoint, tableId) {
         $.get(endpoint, function( data ) {
+          $("#" + tableId).empty();
           for (var x in data) {
             $( "#"+tableId ).append("<tr><td>"+x+"</td><td>"+data[x]+"</td></tr>");
           }
@@ -18,10 +19,10 @@
         });
       }
 
-      setInterval(5000, function() {
+      setInterval(function() {
         fetchAndPrintTable("lrscStatus", "lrsc");
         fetchAndPrintTable("iotfStatus", "iotf");
-      });
+      }, 5000);
 
     </script>
     <style>
@@ -61,14 +62,16 @@
     </svg>
     <div>
       <h2>LRSC Status</h2>
-      <table id="lrsc">
-        <tr><th>Metric</th><th>Value</th></tr>
+      <table>
+        <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+        <tbody id="lrsc"></tbody>
       </table>
     </div>
     <div>
       <h2>IoTF Status</h2>
-      <table id="iotf">
-        <tr><th>Metric</th><th>Value</th></tr>
+      <table>
+        <thead><tr><th>Metric</th><th>Value</th></tr><thead>
+        <tbody id="iotf"></tbody>
       </table>
     </div>
    </body>
