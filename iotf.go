@@ -72,9 +72,11 @@ func (self *iotfConnection) Publish(device, message string) {
 		if newDevice {
 			self.DevicesSeen[device] = struct{}{}
 			self.Report("DEVICES_SEEN", fmt.Sprintf("%v", len(self.DevicesSeen)))
+			self.Report("LAST_REGISTRATION", "OK")
 		}
 		if err != nil {
 			logger.Error("Could not register device: " + err.Error())
+			self.Report("LAST_REGISTRATION", err.Error())
 		}
 	}
 	self.brokerClient.Publish(device, message)

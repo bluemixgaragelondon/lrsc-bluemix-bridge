@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	. "github.com/onsi/gomega"
 	"testing"
 )
@@ -70,12 +71,31 @@ func Test_IoTF_Publish_DoesNotRegisterNewItemIfDeviceExist(test *testing.T) {
 	Expect(len(client.DevicesSeen)).To(Equal(1))
 }
 
+func Test_IoTF_Publish_ReportsRegistrationFailure(test *testing.T) {
+	RegisterTestingT(test)
+
+	client := createMockIotfClient()
+	client.registrar = &failingRegistrar{}
+	newDevice := "test"
+	client.Publish(newDevice, "Hello world")
+	Expect(client.status["LAST_REGISTRATION"]).To(Equal("FAILED"))
+}
+
 func Test_IoTF_Connect_CreatesSuccessfulStatus(test *testing.T) {
 	RegisterTestingT(test)
 
 	client := createMockIotfClient()
 	_ = client.Connect()
 	Expect(client.status["CONNECTION"]).To(Equal("OK"))
+}
+
+func Test_IoTF_Connect_ReportsFailedConnection(test *testing.T) {
+	RegisterTestingT(test)
+
+	client := createMockIotfClient()
+	client.brokerClient = &failingBroker{}
+	_ = client.Connect()
+	Expect(client.status["CONNECTION"]).To(Equal("FAILED"))
 }
 
 func createMockIotfClient() iotfConnection {
@@ -93,9 +113,24 @@ func (*mockBroker) Connect() error {
 func (*mockBroker) Publish(device, message string) {
 }
 
-type mockRegistrar struct {
+type failingBroker struct {
 }
+
+func (*failingBroker) Connect() error {
+	return errors.New("FAILED")
+}
+
+func (*failingBroker) Publish(device, message string) {
+}
+
+type mockRegistrar struct{}
 
 func (*mockRegistrar) RegisterDevice(device string) (bool, error) {
 	return true, nil
+}
+
+type failingRegistrar struct{}
+
+func (*failingRegistrar) RegisterDevice(device string) (bool, error) {
+	return false, errors.New("FAILED")
 }
