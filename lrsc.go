@@ -115,7 +115,6 @@ func (self *LrscConnection) connect() {
 			logger.Info(fmt.Sprintf("Connecting in %v seconds", timeout))
 			time.Sleep(timeout)
 		} else {
-			self.Report("CONNECTION", "OK")
 			break
 		}
 	}
@@ -130,7 +129,8 @@ func (self *LrscConnection) establish() error {
 	conn, err := self.dialer.Dial()
 
 	if err != nil {
-		logger.Error("Could not establish TCP connection")
+		logger.Error("Could not establish TCP connection: %v", err)
+		self.Report("CONNECTION", err.Error())
 		return err
 	}
 	logger.Info("Connected successfully")
@@ -145,6 +145,7 @@ func (self *LrscConnection) establish() error {
 		return err
 	}
 
+	self.Report("CONNECTION", "OK")
 	return nil
 }
 
