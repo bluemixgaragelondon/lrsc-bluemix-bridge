@@ -115,7 +115,7 @@ func (self *LrscConnection) connect() {
 			logger.Info(fmt.Sprintf("Connecting in %v seconds", timeout))
 			time.Sleep(timeout)
 		} else {
-			self.Report("CONNECTION", "Connection established")
+			self.Report("CONNECTION", "OK")
 			break
 		}
 	}

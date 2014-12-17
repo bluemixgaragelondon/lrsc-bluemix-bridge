@@ -1,19 +1,28 @@
 <!doctype html>
 <html>
   <head>
-    <title>LRSC &lt;-&gt; IoTF Status</title>
-    <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+    <title>LRSC &harr; IoTF Status</title>
+    <script src="jquery-2.1.1.min.js"></script>
     <script>
       fetchAndPrintTable("lrscStatus", "lrsc");
       fetchAndPrintTable("iotfStatus", "iotf");
-      
+
       function fetchAndPrintTable(endpoint, tableId) {
         $.get(endpoint, function( data ) {
           for (var x in data) {
             $( "#"+tableId ).append("<tr><td>"+x+"</td><td>"+data[x]+"</td></tr>");
           }
+          if (data.CONNECTION === "OK") {
+            $( "#"+tableId+"-line" ).css('stroke', 'green');
+          }
         });
       }
+
+      setInterval(5000, function() {
+        fetchAndPrintTable("lrscStatus", "lrsc");
+        fetchAndPrintTable("iotfStatus", "iotf");
+      });
+
     </script>
     <style>
       body {
@@ -22,7 +31,6 @@
         color: #444;
       }
       h1 {
-        text-align: center;
         margin: 1em;
       }
       div {
@@ -36,10 +44,21 @@
         border: 2px solid #aaa;
         padding: 1em;
       }
+      line {
+        stroke: red;
+        stroke-width: 5;
+      }
     </style>
   </head>
   <body>
-    <h1>LRSC &lt;-&gt; IoTF Status</h1>
+    <h1>LRSC &harr; IoTF Status</h1>
+    <svg xmlns:xlink="http://www.w3.org/1999/xlink" width="800" height="200">
+      <image xlink:href="sensor.png" x="0" y="0" width="150" height="200" />
+      <line id="lrsc-line" x1="160" x2="290" y1="125" y2="125" />
+      <image xlink:href="bridge.png" width="200" height="150" x="300" y="50" />
+      <line id="iotf-line" x1="510" x2="640" y1="125" y2="125" />
+      <image xlink:href="bluemix.png" width="200" height="150" x="620" y="50"/>
+    </svg>
     <div>
       <h2>LRSC Status</h2>
       <table id="lrsc">

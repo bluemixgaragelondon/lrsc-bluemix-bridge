@@ -7,21 +7,15 @@ import (
 )
 
 func setupHttp() {
-	http.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
-		http.ServeFile(res, req, "status.html")
-	})
+	http.Handle("/", http.FileServer(http.Dir("web")))
 	http.HandleFunc("/env", env)
 	http.HandleFunc("/testpublish", testPublish)
 	http.HandleFunc("/iotfStatus", iotfStatus)
 	http.HandleFunc("/lrscStatus", lrscStatus)
 }
 
-func startHttp() {
-	err := http.ListenAndServe(":"+os.Getenv("PORT"), nil)
-	if err != nil {
-		logger.Error(err.Error())
-		panic(err)
-	}
+func startHttp() error {
+	return http.ListenAndServe(":"+os.Getenv("PORT"), nil)
 }
 
 func env(res http.ResponseWriter, req *http.Request) {

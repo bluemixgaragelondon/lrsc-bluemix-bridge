@@ -15,10 +15,19 @@ func Test_IoTF_ValidCredentialsCanBeExtracted(test *testing.T) {
 	Expect(creds.User).To(Equal("a-br2ybi-y0tc7vicym"))
 }
 
-func Test_IoTF_EmptyVcapServicesProducesError(test *testing.T) {
+func Test_IoTF_EmptyMapVcapServicesProducesError(test *testing.T) {
 	RegisterTestingT(test)
 
 	vcapServices := "{}"
+
+	_, err := extractIotfCreds(vcapServices)
+	Expect(err).To(HaveOccurred())
+}
+
+func Test_IoTF_CompletelyEmptyVcapServicesProducesError(test *testing.T) {
+	RegisterTestingT(test)
+
+	vcapServices := ""
 
 	_, err := extractIotfCreds(vcapServices)
 	Expect(err).To(HaveOccurred())

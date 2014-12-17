@@ -20,10 +20,17 @@ func main() {
 	}
 
 	setupHttp()
-	startHttp()
+	err = startHttp()
+	if err != nil {
+		logger.Error(err.Error())
+		panic(err)
+	}
 }
 
 func startBridge() error {
+	setupReporting(&iotfClient.StatusReporter)
+	setupReporting(&lrscClient.StatusReporter)
+
 	logger.Info("Starting IoTF connection")
 	iotfCreds, err := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
 	if err != nil {
@@ -37,7 +44,6 @@ func startBridge() error {
 	}
 	logger.Info("Established IoTF connection")
 
-	lrscClient.status = make(map[string]string)
 	dialerConfig := dialerConfig{
 		host: os.Getenv("LRSC_HOST"),
 		port: os.Getenv("LRSC_PORT"),
@@ -58,6 +64,10 @@ func startBridge() error {
 
 	go listenForMessages(messages)
 	return nil
+}
+
+func setupReporting(reporter *StatusReporter) {
+	reporter.status = make(map[string]string)
 }
 
 func listenForMessages(messages chan lrscMessage) {
