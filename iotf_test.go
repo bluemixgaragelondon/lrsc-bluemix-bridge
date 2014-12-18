@@ -2,9 +2,14 @@ package main
 
 import (
 	"errors"
+	"github.com/cromega/clogger"
 	. "github.com/onsi/gomega"
 	"testing"
 )
+
+func init() {
+	logger.SetLevel(clogger.Off)
+}
 
 func Test_IoTF_ValidCredentialsCanBeExtracted(test *testing.T) {
 	RegisterTestingT(test)

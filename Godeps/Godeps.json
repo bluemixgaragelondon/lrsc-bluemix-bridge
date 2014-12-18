@@ -13,8 +13,8 @@
 		},
 		{
 			"ImportPath": "github.com/cromega/clogger",
-			"Comment": "0.2",
-			"Rev": "bf5d856fae6c85b199ff86a2e3633e49e51b7ec0"
+			"Comment": "0.2.1",
+			"Rev": "7e539cbbfe1ac76722dd1124957a4b155b2b3787"
 		},
 		{
 			"ImportPath": "github.com/onsi/gomega",
