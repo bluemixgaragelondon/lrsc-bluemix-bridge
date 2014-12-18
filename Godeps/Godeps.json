@@ -1,6 +1,6 @@
 {
 	"ImportPath": "lrsc-bridge",
-	"GoVersion": "go1.3.3",
+	"GoVersion": "go1.4",
 	"Deps": [
 		{
 			"ImportPath": "code.google.com/p/go.net/websocket",
