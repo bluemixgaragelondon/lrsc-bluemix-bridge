@@ -99,7 +99,10 @@ func Test_IoTF_Connect_ReportsFailedConnection(test *testing.T) {
 
 	client := createMockIotfClient()
 	client.brokerClient = &failingBroker{}
-	_ = client.connect()
+	client.err = make(chan error)
+
+	go client.connect()
+	<-client.err
 	Expect(client.stats["CONNECTION"]).To(Equal("FAILED"))
 }
 

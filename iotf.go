@@ -25,6 +25,7 @@ type mqttConnection struct {
 	mqtt        *MQTT.MqttClient
 	credentials *iotfCredentials
 	deviceType  string
+	err         chan error
 }
 
 type iotfRegistrar struct {
@@ -36,6 +37,7 @@ type iotfConnection struct {
 	devicesSeen  map[string]struct{}
 	brokerClient brokerConnection
 	registrar    deviceRegistrar
+	err          chan error
 	statusReporter
 }
 
@@ -51,7 +53,8 @@ type iotfCredentials struct {
 
 func (self *iotfConnection) initialise(creds *iotfCredentials, deviceType string) {
 	self.devicesSeen = make(map[string]struct{})
-	self.brokerClient = &mqttConnection{credentials: creds, deviceType: deviceType}
+	self.err = make(chan error)
+	self.brokerClient = &mqttConnection{credentials: creds, deviceType: deviceType, err: self.err}
 	self.registrar = &iotfRegistrar{credentials: creds, deviceType: deviceType}
 }
 
@@ -59,10 +62,19 @@ func (self *iotfConnection) connect() error {
 	err := self.brokerClient.connect()
 	if err != nil {
 		self.report("CONNECTION", err.Error())
+		self.err <- err
 	} else {
 		self.report("CONNECTION", "OK")
 	}
 	return err
+}
+
+func (self *iotfConnection) error() chan error {
+	return self.err
+}
+
+func (self *iotfConnection) loop() {
+	//noop here as the mqtt library maintains it's own internal loop
 }
 
 func (self *iotfConnection) publish(device, message string) {
@@ -133,8 +145,9 @@ func (self *mqttConnection) connect() error {
 	clientOpts.SetUsername(self.credentials.User)
 	clientOpts.SetPassword(self.credentials.Password)
 
-	clientOpts.SetOnConnectionLost(func(client *MQTT.MqttClient, err error) {
-		logger.Error("IoTF connection lost handler called: " + err.Error())
+	clientOpts.SetOnConnectionLost(func(client *MQTT.MqttClient, mqttErr error) {
+		logger.Error("IoTF connection lost handler called: " + mqttErr.Error())
+		self.err <- errors.New("IoTF connection lost handler called: " + mqttErr.Error())
 	})
 
 	//MQTT.WARN = log.New(os.Stdout, "", 0)

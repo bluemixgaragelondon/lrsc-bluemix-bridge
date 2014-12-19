@@ -33,7 +33,8 @@ func startBridge() error {
 		return err
 	}
 
-	go runConnectionLoop("lrsc client", &lrscClient)
+	go runConnectionLoop("LRSC client", &lrscClient)
+	go runConnectionLoop("IoTF client", &iotfClient)
 
 	go func() {
 		for {
@@ -55,11 +56,6 @@ func setupIotfClient() error {
 		return err
 	}
 	iotfClient.initialise(iotfCreds, "LRSC")
-	err = iotfClient.connect()
-	if err != nil {
-		return err
-	}
-	logger.Info("Established IoTF connection")
 
 	return nil
 }
