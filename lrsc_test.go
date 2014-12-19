@@ -7,26 +7,26 @@ import (
 	"testing"
 )
 
-type TestDialer struct {
+type testDialer struct {
 	conn io.ReadWriteCloser
 }
 
-func (self TestDialer) Dial() (io.ReadWriteCloser, error) {
+func (self testDialer) dial() (io.ReadWriteCloser, error) {
 	return self.conn, nil
 }
 
-func (self TestDialer) Endpoint() string {
+func (self testDialer) endpoint() string {
 	return "/dev/null"
 }
 
-type FailingDialer struct {
+type failingDialer struct {
 }
 
-func (self FailingDialer) Dial() (io.ReadWriteCloser, error) {
+func (self failingDialer) dial() (io.ReadWriteCloser, error) {
 	return nil, errors.New("FAILED")
 }
 
-func (self FailingDialer) Endpoint() string {
+func (self failingDialer) endpoint() string {
 	return "/dev/null"
 }
 
@@ -37,31 +37,31 @@ func TestValidateHandshake(t *testing.T) {
 	Expect(validateHandshake(response)).To(Equal(true))
 }
 
-type MockConnection struct {
+type mockConnection struct {
 	readFunc  func() (string, error)
 	writeFunc func(string) error
-	StatusReporter
+	statusReporter
 }
 
-func (self *MockConnection) Read(b []byte) (n int, err error) {
+func (self *mockConnection) Read(b []byte) (n int, err error) {
 	response, err := self.readFunc()
 	copy(b, response)
 	return len(response), err
 }
 
-func (self *MockConnection) Write(b []byte) (n int, err error) {
+func (self *mockConnection) Write(b []byte) (n int, err error) {
 	err = self.writeFunc(string(b))
 	return len(b), err
 }
 
-func (self *MockConnection) Close() error {
+func (self *mockConnection) Close() error {
 	return nil
 }
 
 func Test_LRSC_CanReceiveMessage(t *testing.T) {
 	RegisterTestingT(t)
 
-	mockConn := &MockConnection{
+	mockConn := &mockConnection{
 		readFunc: func() (string, error) {
 			return `{"deveui": "id", "pdu": "data"}` + "\n", nil
 		},
@@ -69,11 +69,13 @@ func Test_LRSC_CanReceiveMessage(t *testing.T) {
 			return nil
 		}}
 
-	testDialer := &TestDialer{conn: mockConn}
-	lrscClient := &LrscConnection{dialer: testDialer}
-	setupReporting(&lrscClient.StatusReporter)
+	testDialer := &testDialer{conn: mockConn}
+	lrscClient := &lrscConnection{dialer: testDialer}
+	lrscClient.stats = make(map[string]string)
+	lrscClient.inbound = make(chan lrscMessage)
+	go runConnectionLoop("LRSC Client", lrscClient)
 
-	messages := lrscClient.StartListening()
+	messages := lrscClient.inbound
 	Expect(<-messages).To(Equal(lrscMessage{Deveui: "id", Pdu: "data"}))
 }
 
@@ -83,7 +85,7 @@ func Test_LRSC_Reconnects(t *testing.T) {
 	count := 0
 	connectionAttempts := 0
 
-	mockConn := &MockConnection{
+	mockConn := &mockConnection{
 		readFunc: func() (string, error) {
 			if count == 0 {
 				count += 1
@@ -99,11 +101,13 @@ func Test_LRSC_Reconnects(t *testing.T) {
 			return nil
 		}}
 
-	testDialer := &TestDialer{conn: mockConn}
-	lrscClient := &LrscConnection{dialer: testDialer}
-	setupReporting(&lrscClient.StatusReporter)
+	testDialer := &testDialer{conn: mockConn}
+	lrscClient := &lrscConnection{dialer: testDialer}
+	lrscClient.stats = make(map[string]string)
+	lrscClient.inbound = make(chan lrscMessage)
+	go runConnectionLoop("LRSC Client", lrscClient)
 
-	messages := lrscClient.StartListening()
+	messages := lrscClient.inbound
 	<-messages
 	Expect(connectionAttempts).To(Equal(2))
 }
@@ -111,10 +115,10 @@ func Test_LRSC_Reconnects(t *testing.T) {
 func Test_LRSC_ReportsErrorIfConnectionFails(t *testing.T) {
 	RegisterTestingT(t)
 
-	failingDialer := &FailingDialer{}
-	lrscClient := &LrscConnection{dialer: failingDialer}
-	setupReporting(&lrscClient.StatusReporter)
+	failingDialer := &failingDialer{}
+	lrscClient := &lrscConnection{dialer: failingDialer}
+	lrscClient.stats = make(map[string]string)
 	lrscClient.establish()
 
-	Expect(lrscClient.status["CONNECTION"]).To(Equal("FAILED"))
+	Expect(lrscClient.stats["CONNECTION"]).To(Equal("FAILED"))
 }

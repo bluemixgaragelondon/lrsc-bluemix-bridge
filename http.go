@@ -26,16 +26,16 @@ func env(res http.ResponseWriter, req *http.Request) {
 }
 
 func testPublish(res http.ResponseWriter, req *http.Request) {
-	iotfClient.Publish("lrsc-client-test-sensor-1", `{"msg": "Hello world"}`)
+	iotfClient.publish("lrsc-client-test-sensor-1", `{"msg": "Hello world"}`)
 	fmt.Fprintf(res, "done")
 }
 
 func iotfStatus(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(res, "%v", iotfClient.Status())
+	fmt.Fprintf(res, "%v", iotfClient.status())
 }
 
 func lrscStatus(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(res, "%v", lrscClient.Status())
+	fmt.Fprintf(res, "%v", lrscClient.status())
 }

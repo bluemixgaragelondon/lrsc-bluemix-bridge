@@ -12,13 +12,13 @@ import (
 	"time"
 )
 
-type BrokerConnection interface {
-	Connect() error
-	Publish(topic, message string)
+type brokerConnection interface {
+	connect() error
+	publish(topic, message string)
 }
 
-type DeviceRegistrar interface {
-	RegisterDevice(deviceId string) (bool, error)
+type deviceRegistrar interface {
+	registerDevice(deviceId string) (bool, error)
 }
 
 type mqttConnection struct {
@@ -33,10 +33,10 @@ type iotfRegistrar struct {
 }
 
 type iotfConnection struct {
-	DevicesSeen  map[string]struct{}
-	brokerClient BrokerConnection
-	registrar    DeviceRegistrar
-	StatusReporter
+	devicesSeen  map[string]struct{}
+	brokerClient brokerConnection
+	registrar    deviceRegistrar
+	statusReporter
 }
 
 type iotfCredentials struct {
@@ -49,40 +49,39 @@ type iotfCredentials struct {
 	MqttUnsecurePort int    `json:"mqtt_u_port"`
 }
 
-func (self *iotfConnection) Initialise(creds *iotfCredentials, deviceType string) {
-	self.status = make(map[string]string)
-	self.DevicesSeen = make(map[string]struct{})
+func (self *iotfConnection) initialise(creds *iotfCredentials, deviceType string) {
+	self.devicesSeen = make(map[string]struct{})
 	self.brokerClient = &mqttConnection{credentials: creds, deviceType: deviceType}
 	self.registrar = &iotfRegistrar{credentials: creds, deviceType: deviceType}
 }
 
-func (self *iotfConnection) Connect() error {
-	err := self.brokerClient.Connect()
+func (self *iotfConnection) connect() error {
+	err := self.brokerClient.connect()
 	if err != nil {
-		self.Report("CONNECTION", err.Error())
+		self.report("CONNECTION", err.Error())
 	} else {
-		self.Report("CONNECTION", "OK")
+		self.report("CONNECTION", "OK")
 	}
 	return err
 }
 
-func (self *iotfConnection) Publish(device, message string) {
-	if _, deviceFound := self.DevicesSeen[device]; deviceFound == false {
-		newDevice, err := self.registrar.RegisterDevice(device)
+func (self *iotfConnection) publish(device, message string) {
+	if _, deviceFound := self.devicesSeen[device]; deviceFound == false {
+		newDevice, err := self.registrar.registerDevice(device)
 		if newDevice {
-			self.DevicesSeen[device] = struct{}{}
-			self.Report("DEVICES_SEEN", fmt.Sprintf("%v", len(self.DevicesSeen)))
-			self.Report("LAST_REGISTRATION", "OK")
+			self.devicesSeen[device] = struct{}{}
+			self.report("DEVICES_SEEN", fmt.Sprintf("%v", len(self.devicesSeen)))
+			self.report("LAST_REGISTRATION", "OK")
 		}
 		if err != nil {
 			logger.Error("Could not register device: " + err.Error())
-			self.Report("LAST_REGISTRATION", err.Error())
+			self.report("LAST_REGISTRATION", err.Error())
 		}
 	}
-	self.brokerClient.Publish(device, message)
+	self.brokerClient.publish(device, message)
 }
 
-func (self *iotfRegistrar) RegisterDevice(device string) (bool, error) {
+func (self *iotfRegistrar) registerDevice(device string) (bool, error) {
 	registerUrl := fmt.Sprintf("%v/organizations/%v/devices", self.credentials.BaseUri, self.credentials.Org)
 	body := strings.NewReader(fmt.Sprintf(`{"type": "%v", "id": "%v"}`, self.deviceType, device))
 	request, err := http.NewRequest("POST", registerUrl, body)
@@ -127,7 +126,7 @@ func parseErrorFromIotf(body []byte) string {
 	return parsedResponse.Message
 }
 
-func (self *mqttConnection) Connect() error {
+func (self *mqttConnection) connect() error {
 	clientOpts := MQTT.NewClientOptions()
 	clientOpts.AddBroker(fmt.Sprintf("tls://%v:%v", self.credentials.MqttHost, self.credentials.MqttSecurePort))
 	clientOpts.SetClientId(fmt.Sprintf("a:%v:$v", self.credentials.Org, generateClientIdSuffix()))
@@ -150,7 +149,7 @@ func (self *mqttConnection) Connect() error {
 	return nil
 }
 
-func (self *mqttConnection) Publish(device, message string) {
+func (self *mqttConnection) publish(device, message string) {
 	mqttMessage := MQTT.NewMessage([]byte(message))
 	topic := fmt.Sprintf("iot-2/type/%v/id/%v/evt/TEST/fmt/json", self.deviceType, device)
 	logger.Info("Publishing '%v' to %v", message, topic)

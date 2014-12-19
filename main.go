@@ -1,14 +1,11 @@
 package main
 
 import (
-	"fmt"
-	"github.com/cromega/clogger"
-	"net/url"
 	"os"
 )
 
 var logger = createLogger()
-var lrscClient LrscConnection
+var lrscClient lrscConnection
 var iotfClient iotfConnection
 
 func main() {
@@ -28,75 +25,63 @@ func main() {
 }
 
 func startBridge() error {
-	setupReporting(&iotfClient.StatusReporter)
-	setupReporting(&lrscClient.StatusReporter)
+	if err := setupIotfClient(); err != nil {
+		return err
+	}
+
+	if err := setupLrscClient(); err != nil {
+		return err
+	}
+
+	go runConnectionLoop("lrsc client", &lrscClient)
+
+	go func() {
+		for {
+			message := <-lrscClient.inbound
+			iotfClient.publish(message.Deveui, message.Pdu)
+		}
+	}()
+
+	return nil
+}
+
+func setupIotfClient() error {
+	iotfClient.stats = make(map[string]string)
 
 	logger.Info("Starting IoTF connection")
 	iotfCreds, err := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
 	if err != nil {
-		iotfClient.Report("CONNECTION", err.Error())
+		iotfClient.report("CONNECTION", err.Error())
 		return err
 	}
-	iotfClient.Initialise(iotfCreds, "LRSC")
-	err = iotfClient.Connect()
+	iotfClient.initialise(iotfCreds, "LRSC")
+	err = iotfClient.connect()
 	if err != nil {
 		return err
 	}
 	logger.Info("Established IoTF connection")
 
+	return nil
+}
+
+func setupLrscClient() error {
+	lrscClient.stats = make(map[string]string)
 	dialerConfig := dialerConfig{
 		host: os.Getenv("LRSC_HOST"),
 		port: os.Getenv("LRSC_PORT"),
 		cert: os.Getenv("LRSC_CLIENT_CERT"),
 		key:  os.Getenv("LRSC_CLIENT_KEY"),
 	}
-	dialer, err := CreateTlsDialer(dialerConfig, &lrscClient.StatusReporter)
+	dialer, err := createTlsDialer(dialerConfig, &lrscClient.statusReporter)
 	if err != nil {
-		lrscClient.Report("CONNECTION", err.Error())
+		logger.Error("failed to create dialer: %v", err)
+		lrscClient.report("CONNECTION", err.Error())
 		return err
 	}
 
 	lrscClient.dialer = dialer
+	lrscClient.err = make(chan error)
+	lrscClient.inbound = make(chan lrscMessage, 100)
 
-	logger.Info("Starting LRSC connection")
-	messages := lrscClient.StartListening()
-
-	go listenForMessages(messages)
 	return nil
-}
-
-func setupReporting(reporter *StatusReporter) {
-	reporter.status = make(map[string]string)
-}
-
-func listenForMessages(messages <-chan lrscMessage) {
-	for message := range messages {
-		logger.Info("Received message %v from device %v", message.Pdu, message.Deveui)
-		iotfClient.Publish(message.Deveui, message.toJson())
-	}
-}
-
-func createLogger() clogger.Logger {
-	logTarget := os.Getenv("REMOTE_LOG_URL")
-	var logger clogger.Logger
-
-	if logTarget == "" {
-		logger = clogger.CreateIoWriter(os.Stdout)
-	} else {
-		uri, err := url.Parse(logTarget)
-		if err != nil {
-			fmt.Printf("Error: failed to parse remote log target (%v)", err)
-		}
-
-		app := "lrsc-bridge-" + os.Getenv("LRSC_ENV")
-
-		logger, err = clogger.CreateSyslog(uri.Scheme, uri.Host, app)
-		if err != nil {
-			fmt.Printf("Error: failed to initialise remote logger (%v)", err)
-		}
-	}
-
-	logger.SetLevel(clogger.Debug)
-
-	return logger
 }

@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 )
 
-type StatusReporter struct {
-	status map[string]string
+type statusReporter struct {
+	stats map[string]string
 }
 
-func (self *StatusReporter) Report(key, value string) {
-	self.status[key] = value
+func (self *statusReporter) report(key, value string) {
+	self.stats[key] = value
 }
 
-func (self StatusReporter) Status() string {
-	summary, _ := json.Marshal(self.status)
+func (self statusReporter) status() string {
+	summary, _ := json.Marshal(self.stats)
 	return string(summary)
 }

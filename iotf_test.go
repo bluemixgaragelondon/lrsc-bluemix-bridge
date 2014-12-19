@@ -53,8 +53,8 @@ func Test_IoTF_Publish_RegistersNewDevice(test *testing.T) {
 
 	client := createMockIotfClient()
 	newDevice := "test"
-	client.Publish(newDevice, "Hello world")
-	Expect(len(client.DevicesSeen)).To(Equal(1))
+	client.publish(newDevice, "Hello world")
+	Expect(len(client.devicesSeen)).To(Equal(1))
 }
 
 func Test_IoTF_Publish_ReportsNewDevice(test *testing.T) {
@@ -62,18 +62,18 @@ func Test_IoTF_Publish_ReportsNewDevice(test *testing.T) {
 
 	client := createMockIotfClient()
 	newDevice := "test"
-	client.Publish(newDevice, "Hello world")
-	Expect(client.status["DEVICES_SEEN"]).To(Equal("1"))
+	client.publish(newDevice, "Hello world")
+	Expect(client.stats["DEVICES_SEEN"]).To(Equal("1"))
 }
 
 func Test_IoTF_Publish_DoesNotRegisterNewItemIfDeviceExist(test *testing.T) {
 	RegisterTestingT(test)
 
 	client := createMockIotfClient()
-	client.DevicesSeen["test"] = struct{}{}
+	client.devicesSeen["test"] = struct{}{}
 	newDevice := "test"
-	client.Publish(newDevice, "Hello world")
-	Expect(len(client.DevicesSeen)).To(Equal(1))
+	client.publish(newDevice, "Hello world")
+	Expect(len(client.devicesSeen)).To(Equal(1))
 }
 
 func Test_IoTF_Publish_ReportsRegistrationFailure(test *testing.T) {
@@ -82,16 +82,16 @@ func Test_IoTF_Publish_ReportsRegistrationFailure(test *testing.T) {
 	client := createMockIotfClient()
 	client.registrar = &failingRegistrar{}
 	newDevice := "test"
-	client.Publish(newDevice, "Hello world")
-	Expect(client.status["LAST_REGISTRATION"]).To(Equal("FAILED"))
+	client.publish(newDevice, "Hello world")
+	Expect(client.stats["LAST_REGISTRATION"]).To(Equal("FAILED"))
 }
 
 func Test_IoTF_Connect_CreatesSuccessfulStatus(test *testing.T) {
 	RegisterTestingT(test)
 
 	client := createMockIotfClient()
-	_ = client.Connect()
-	Expect(client.status["CONNECTION"]).To(Equal("OK"))
+	_ = client.connect()
+	Expect(client.stats["CONNECTION"]).To(Equal("OK"))
 }
 
 func Test_IoTF_Connect_ReportsFailedConnection(test *testing.T) {
@@ -99,43 +99,43 @@ func Test_IoTF_Connect_ReportsFailedConnection(test *testing.T) {
 
 	client := createMockIotfClient()
 	client.brokerClient = &failingBroker{}
-	_ = client.Connect()
-	Expect(client.status["CONNECTION"]).To(Equal("FAILED"))
+	_ = client.connect()
+	Expect(client.stats["CONNECTION"]).To(Equal("FAILED"))
 }
 
 func createMockIotfClient() iotfConnection {
 	devicesSeen := make(map[string]struct{})
-	return iotfConnection{StatusReporter: StatusReporter{status: make(map[string]string)}, DevicesSeen: devicesSeen, brokerClient: &mockBroker{}, registrar: &mockRegistrar{}}
+	return iotfConnection{statusReporter: statusReporter{stats: make(map[string]string)}, devicesSeen: devicesSeen, brokerClient: &mockBroker{}, registrar: &mockRegistrar{}}
 }
 
 type mockBroker struct {
 }
 
-func (*mockBroker) Connect() error {
+func (*mockBroker) connect() error {
 	return nil
 }
 
-func (*mockBroker) Publish(device, message string) {
+func (*mockBroker) publish(device, message string) {
 }
 
 type failingBroker struct {
 }
 
-func (*failingBroker) Connect() error {
+func (*failingBroker) connect() error {
 	return errors.New("FAILED")
 }
 
-func (*failingBroker) Publish(device, message string) {
+func (*failingBroker) publish(device, message string) {
 }
 
 type mockRegistrar struct{}
 
-func (*mockRegistrar) RegisterDevice(device string) (bool, error) {
+func (*mockRegistrar) registerDevice(device string) (bool, error) {
 	return true, nil
 }
 
 type failingRegistrar struct{}
 
-func (*failingRegistrar) RegisterDevice(device string) (bool, error) {
+func (*failingRegistrar) registerDevice(device string) (bool, error) {
 	return false, errors.New("FAILED")
 }
