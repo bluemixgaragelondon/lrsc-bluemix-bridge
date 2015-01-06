@@ -61,7 +61,7 @@ func createLogger() clogger.Logger {
 		}
 	}
 
-	logger.SetLevel(clogger.Debug)
+	logger.SetLevel(clogger.Info)
 
 	return logger
 }

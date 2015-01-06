@@ -62,7 +62,6 @@ func (self *iotfConnection) connect() error {
 	err := self.brokerClient.connect()
 	if err != nil {
 		self.report("CONNECTION", err.Error())
-		self.err <- err
 	} else {
 		self.report("CONNECTION", "OK")
 	}
@@ -165,7 +164,7 @@ func (self *mqttConnection) connect() error {
 func (self *mqttConnection) publish(device, message string) {
 	mqttMessage := MQTT.NewMessage([]byte(message))
 	topic := fmt.Sprintf("iot-2/type/%v/id/%v/evt/TEST/fmt/json", self.deviceType, device)
-	logger.Info("Publishing '%v' to %v", message, topic)
+	logger.Debug("Publishing '%v' to %v", message, topic)
 	self.mqtt.PublishMessage(topic, mqttMessage)
 }
 
