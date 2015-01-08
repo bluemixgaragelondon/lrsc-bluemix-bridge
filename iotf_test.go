@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	MQTT "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git"
 	"github.com/cromega/clogger"
 	. "github.com/onsi/gomega"
 	"testing"
@@ -106,6 +107,13 @@ func Test_IoTF_Connect_ReportsFailedConnection(test *testing.T) {
 	Expect(client.stats["CONNECTION"]).To(Equal("FAILED"))
 }
 
+func Test_IoTF_ExtractsDeviceFromCommandTopic(test *testing.T) {
+	RegisterTestingT(test)
+
+	topic := "iot-2/type/foo/id/devid/cmd/command/fmt/json"
+	Expect(extractDeviceFromCommandTopic(topic)).To(Equal("devid"))
+}
+
 func createMockIotfClient() iotfConnection {
 	devicesSeen := make(map[string]struct{})
 	return iotfConnection{statusReporter: statusReporter{stats: make(map[string]string)}, devicesSeen: devicesSeen, brokerClient: &mockBroker{}, registrar: &mockRegistrar{}}
@@ -121,6 +129,10 @@ func (*mockBroker) connect() error {
 func (*mockBroker) publish(device, message string) {
 }
 
+func (*mockBroker) subscribeToCommandMessages() (<-chan MQTT.Message, error) {
+	return make(chan MQTT.Message), nil
+}
+
 type failingBroker struct {
 }
 
@@ -129,6 +141,10 @@ func (*failingBroker) connect() error {
 }
 
 func (*failingBroker) publish(device, message string) {
+}
+
+func (*failingBroker) subscribeToCommandMessages() (<-chan MQTT.Message, error) {
+	return make(chan MQTT.Message), nil
 }
 
 type mockRegistrar struct{}

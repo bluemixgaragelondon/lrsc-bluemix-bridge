@@ -37,6 +37,12 @@ func startBridge() error {
 	go runConnectionLoop("IoTF client", &iotfClient)
 
 	go func() {
+		for commandMessage := range iotfClient.commands {
+			logger.Debug("Received command message: %v", commandMessage)
+		}
+	}()
+
+	go func() {
 		for {
 			message := <-lrscClient.inbound
 			iotfClient.publish(message.Deveui, message.Pdu)

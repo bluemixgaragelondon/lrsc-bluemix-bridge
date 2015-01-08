@@ -8,13 +8,15 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 )
 
 type brokerConnection interface {
 	connect() error
-	publish(topic, message string)
+	publish(device, message string)
+	subscribeToCommandMessages() (<-chan MQTT.Message, error)
 }
 
 type deviceRegistrar interface {
@@ -37,8 +39,13 @@ type iotfConnection struct {
 	devicesSeen  map[string]struct{}
 	brokerClient brokerConnection
 	registrar    deviceRegistrar
+	commands     chan command
 	err          chan error
 	statusReporter
+}
+
+type command struct {
+	device, payload string
 }
 
 type iotfCredentials struct {
@@ -53,6 +60,7 @@ type iotfCredentials struct {
 
 func (self *iotfConnection) initialise(creds *iotfCredentials, deviceType string) {
 	self.devicesSeen = make(map[string]struct{})
+	self.commands = make(chan command)
 	self.err = make(chan error)
 	self.brokerClient = &mqttConnection{credentials: creds, deviceType: deviceType, err: self.err}
 	self.registrar = &iotfRegistrar{credentials: creds, deviceType: deviceType}
@@ -62,10 +70,18 @@ func (self *iotfConnection) connect() error {
 	err := self.brokerClient.connect()
 	if err != nil {
 		self.report("CONNECTION", err.Error())
-	} else {
-		self.report("CONNECTION", "OK")
+		return err
 	}
-	return err
+	self.report("CONNECTION", "OK")
+
+	err = self.subscribeToCommandMessages()
+	if err != nil {
+		self.report("SUBSCRIPTION", err.Error())
+		return err
+	}
+	self.report("SUBSCRIPTION", "OK")
+
+	return nil
 }
 
 func (self *iotfConnection) error() chan error {
@@ -74,6 +90,26 @@ func (self *iotfConnection) error() chan error {
 
 func (self *iotfConnection) loop() {
 	//noop here as the mqtt library maintains it's own internal loop
+}
+
+func (self *iotfConnection) subscribeToCommandMessages() error {
+	messages, err := self.brokerClient.subscribeToCommandMessages()
+	if err != nil {
+		return err
+	}
+	go func() {
+		for message := range messages {
+			device := extractDeviceFromCommandTopic(message.Topic())
+			command := command{device: device, payload: string(message.Payload())}
+			self.commands <- command
+		}
+	}()
+	return nil
+}
+
+func extractDeviceFromCommandTopic(topic string) string {
+	topicMatcher := regexp.MustCompile(`^iot-2/type/.*?/id/(.*?)/`)
+	return topicMatcher.FindStringSubmatch(topic)[1]
 }
 
 func (self *iotfConnection) publish(device, message string) {
@@ -166,6 +202,19 @@ func (self *mqttConnection) publish(device, message string) {
 	topic := fmt.Sprintf("iot-2/type/%v/id/%v/evt/TEST/fmt/json", self.deviceType, device)
 	logger.Debug("Publishing '%v' to %v", message, topic)
 	self.mqtt.PublishMessage(topic, mqttMessage)
+}
+
+func (self *mqttConnection) subscribeToCommandMessages() (<-chan MQTT.Message, error) {
+	messages := make(chan MQTT.Message)
+	topic := fmt.Sprintf("iot-2/type/%s/id/+/cmd/+/fmt/json", self.deviceType)
+	topicFilter, _ := MQTT.NewTopicFilter(topic, byte(MQTT.QOS_ZERO))
+	_, err := self.mqtt.StartSubscription(func(_ *MQTT.MqttClient, message MQTT.Message) {
+		messages <- message
+	}, topicFilter)
+	if err != nil {
+		return nil, errors.New("Could not subscribe to command messages: " + err.Error())
+	}
+	return messages, nil
 }
 
 func generateClientIdSuffix() string {
