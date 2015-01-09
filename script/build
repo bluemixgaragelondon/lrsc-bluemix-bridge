@@ -6,4 +6,5 @@ export PATH="$GOPATH/bin:$PATH"
 go get github.com/tools/godep
 godep restore
 cd iotf && godep restore && cd -
+go install github.com/onsi/ginkgo
 ginkgo -r
