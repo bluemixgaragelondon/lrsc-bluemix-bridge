@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cromega/clogger"
-	"lrsc-bridge/mqtt"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/mqtt"
 	"math/rand"
 	"regexp"
 	"time"

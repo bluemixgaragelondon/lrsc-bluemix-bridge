@@ -3,7 +3,7 @@ package iotf
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"lrsc-bridge/mqtt"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/mqtt"
 )
 
 var _ = Describe("IoTF Broker", func() {
