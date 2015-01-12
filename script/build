@@ -7,4 +7,4 @@ go get github.com/tools/godep
 go get github.com/onsi/ginkgo/ginkgo
 cd $GOPATH/src/hub.jazz.net/git/bluemixgarage/lrsc-bridge
 godep restore
-ginkgo -r
+ginkgo -r -noColor -randomizeAllSpecs
