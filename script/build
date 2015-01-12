@@ -4,6 +4,6 @@
 export PATH="$GOPATH/bin:$PATH"
 
 go get github.com/tools/godep
+go get github.com/onsi/ginkgo/ginkgo
 godep restore
-cd iotf && godep restore && cd -
-go test -v ./...
+ginkgo -r
