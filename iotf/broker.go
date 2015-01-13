@@ -13,14 +13,17 @@ import (
 var logger clogger.Logger
 
 type brokerConnection struct {
-	broker mqtt.Client
+	broker   mqtt.Client
+	events   <-chan Event
+	commands chan<- Command
+	errChan  chan<- error
 }
 
 const (
 	deviceType = "LRSC"
 )
 
-func newClientOptions(credentials iotfCredentials, errChan chan error) mqtt.ClientOptions {
+func newClientOptions(credentials iotfCredentials, errChan chan<- error) mqtt.ClientOptions {
 	return mqtt.ClientOptions{
 		Broker:   fmt.Sprintf("tls://%v:%v", credentials.MqttHost, credentials.MqttSecurePort),
 		ClientId: fmt.Sprintf("a:%v:$v", credentials.Org, generateClientIdSuffix()),
@@ -39,23 +42,26 @@ func generateClientIdSuffix() string {
 	return string(suffix)
 }
 
-func newBrokerConnection(credentials iotfCredentials, errChan chan error) brokerConnection {
+func newBrokerConnection(credentials iotfCredentials, events <-chan Event, commands chan<- Command, errChan chan<- error) brokerConnection {
 	clientOptions := newClientOptions(credentials, errChan)
 	broker := mqtt.NewPahoClient(clientOptions)
-	return brokerConnection{broker: broker}
+	return brokerConnection{broker: broker, events: events, commands: commands, errChan: errChan}
 }
 
-func (self *brokerConnection) run(events <-chan Event, commands chan<- Command) error {
-	err := self.broker.Start()
+func (self *brokerConnection) connect() error {
+	var err error
+	err = self.broker.Start()
 	if err != nil {
-		err = self.subscribeToCommandMessages(commands)
+		return err
 	}
-	go func() {
-		for event := range events {
-			self.publishMessageFromDevice(event)
-		}
-	}()
-	return err
+
+	return self.subscribeToCommandMessages(self.commands)
+}
+
+func (self *brokerConnection) run() {
+	for event := range self.events {
+		self.publishMessageFromDevice(event)
+	}
 }
 
 func (self *brokerConnection) publishMessageFromDevice(event Event) {
