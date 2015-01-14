@@ -12,7 +12,7 @@ var _ = Describe("IoTF Broker", func() {
 	Describe("brokerConnection", func() {
 		var (
 			client         mockClient
-			connection     brokerConnection
+			connection     BrokerConnection
 			commandChannel chan Command
 			errorChannel   chan error
 			eventChannel   chan Event
@@ -24,7 +24,7 @@ var _ = Describe("IoTF Broker", func() {
 			commandChannel = make(chan Command)
 			errorChannel = make(chan error)
 			eventChannel = make(chan Event)
-			connection = brokerConnection{broker: &client, commands: commandChannel, events: eventChannel, errChan: errorChannel}
+			connection = BrokerConnection{broker: &client, commands: commandChannel, events: eventChannel, errChan: errorChannel}
 		})
 
 		AfterEach(func() {
@@ -33,19 +33,19 @@ var _ = Describe("IoTF Broker", func() {
 			close(eventChannel)
 		})
 
-		Describe("connect", func() {
+		Describe("Connect", func() {
 			Context("connection successful", func() {
 				It("starts the broker", func() {
-					connection.connect()
+					connection.Connect()
 					Expect(client.started).To(Equal(true))
 				})
 
 				It("returns nil", func() {
-					Expect(connection.connect()).ToNot(HaveOccurred())
+					Expect(connection.Connect()).ToNot(HaveOccurred())
 				})
 
 				It("subscribes to command messages", func() {
-					connection.connect()
+					connection.Connect()
 					client.fakePublish("command")
 
 					Eventually(commandChannel).Should(Receive())
@@ -55,23 +55,23 @@ var _ = Describe("IoTF Broker", func() {
 			Context("broker connection fails", func() {
 				It("returns an error", func() {
 					client.connectFail = true
-					Expect(connection.connect()).To(HaveOccurred())
+					Expect(connection.Connect()).To(HaveOccurred())
 				})
 			})
 
 			Context("subscription fails", func() {
 				It("returns an error", func() {
 					client.subscribeFail = true
-					Expect(connection.connect()).To(HaveOccurred())
+					Expect(connection.Connect()).To(HaveOccurred())
 				})
 			})
 
 		})
 
-		Describe("run", func() {
+		Describe("Loop", func() {
 			Context("event received from events channel", func() {
 				It("publishes messages to broker", func() {
-					go connection.run()
+					go connection.Loop()
 					eventChannel <- Event{Device: "foo", Payload: "data"}
 					eventChannel <- Event{Device: "bar", Payload: "data"}
 
@@ -82,6 +82,13 @@ var _ = Describe("IoTF Broker", func() {
 					Expect(client.messages[0].Topic()).To(Equal("iot-2/type/LRSC/id/foo/evt/TEST/fmt/json"))
 					Expect(client.messages[1].Topic()).To(Equal("iot-2/type/LRSC/id/bar/evt/TEST/fmt/json"))
 				})
+			})
+		})
+
+		Describe("Error", func() {
+			It("returns the error channel", func() {
+				var errChan <-chan error = errorChannel
+				Expect(connection.Error()).To(Equal(errChan))
 			})
 		})
 

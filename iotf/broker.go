@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cromega/clogger"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/mqtt"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
 	"math/rand"
 	"regexp"
 	"time"
@@ -12,18 +13,19 @@ import (
 
 var logger clogger.Logger
 
-type brokerConnection struct {
-	broker   mqtt.Client
+type BrokerConnection struct {
+	broker mqtt.Client
+	reporter.StatusReporter
 	events   <-chan Event
 	commands chan<- Command
-	errChan  chan<- error
+	errChan  chan error
 }
 
 const (
 	deviceType = "LRSC"
 )
 
-func newClientOptions(credentials iotfCredentials, errChan chan<- error) mqtt.ClientOptions {
+func newClientOptions(credentials *Credentials, errChan chan<- error) mqtt.ClientOptions {
 	return mqtt.ClientOptions{
 		Broker:   fmt.Sprintf("tls://%v:%v", credentials.MqttHost, credentials.MqttSecurePort),
 		ClientId: fmt.Sprintf("a:%v:$v", credentials.Org, generateClientIdSuffix()),
@@ -42,13 +44,14 @@ func generateClientIdSuffix() string {
 	return string(suffix)
 }
 
-func newBrokerConnection(credentials iotfCredentials, events <-chan Event, commands chan<- Command, errChan chan<- error) brokerConnection {
+func NewBrokerConnection(credentials *Credentials, events <-chan Event, commands chan<- Command) *BrokerConnection {
+	errChan := make(chan error)
 	clientOptions := newClientOptions(credentials, errChan)
 	broker := mqtt.NewPahoClient(clientOptions)
-	return brokerConnection{broker: broker, events: events, commands: commands, errChan: errChan}
+	return &BrokerConnection{broker: broker, events: events, commands: commands, errChan: errChan}
 }
 
-func (self *brokerConnection) connect() error {
+func (self *BrokerConnection) Connect() error {
 	var err error
 	err = self.broker.Start()
 	if err != nil {
@@ -58,18 +61,22 @@ func (self *brokerConnection) connect() error {
 	return self.subscribeToCommandMessages(self.commands)
 }
 
-func (self *brokerConnection) run() {
+func (self *BrokerConnection) Loop() {
 	for event := range self.events {
 		self.publishMessageFromDevice(event)
 	}
 }
 
-func (self *brokerConnection) publishMessageFromDevice(event Event) {
+func (self *BrokerConnection) Error() <-chan error {
+	return self.errChan
+}
+
+func (self *BrokerConnection) publishMessageFromDevice(event Event) {
 	topic := fmt.Sprintf("iot-2/type/%v/id/%v/evt/TEST/fmt/json", deviceType, event.Device)
 	self.broker.PublishMessage(topic, []byte(event.Payload))
 }
 
-func (self *brokerConnection) subscribeToCommandMessages(commands chan<- Command) error {
+func (self *BrokerConnection) subscribeToCommandMessages(commands chan<- Command) error {
 	topic := fmt.Sprintf("iot-2/type/%s/id/+/cmd/+/fmt/json", deviceType)
 	return self.broker.StartSubscription(topic, func(message mqtt.Message) {
 		device := extractDeviceFromCommandTopic(message.Topic())
