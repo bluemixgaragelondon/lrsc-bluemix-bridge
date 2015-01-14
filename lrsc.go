@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
 	"io"
 	"io/ioutil"
 )
@@ -14,7 +15,7 @@ type lrscConnection struct {
 	conn   io.ReadWriteCloser
 	reader *bufio.Reader
 	dialer dialer
-	statusReporter
+	reporter.StatusReporter
 	inbound chan lrscMessage
 	err     chan error
 }
@@ -39,7 +40,7 @@ type dialer interface {
 type tlsDialer struct {
 	raddr      string
 	sslContext *tls.Config
-	reporter   *statusReporter
+	reporter   *reporter.StatusReporter
 }
 
 type dialerConfig struct {
@@ -54,7 +55,7 @@ func (self *tlsDialer) endpoint() string {
 	return self.raddr
 }
 
-func createTlsDialer(config dialerConfig, reporter *statusReporter) (dialer, error) {
+func createTlsDialer(config dialerConfig, reporter *reporter.StatusReporter) (dialer, error) {
 	cert, err := ioutil.ReadFile(config.cert)
 	if err != nil {
 		return nil, fmt.Errorf("Could not read client certificate: %v", err)
@@ -76,12 +77,12 @@ func createTlsDialer(config dialerConfig, reporter *statusReporter) (dialer, err
 	return &tlsDialer{raddr: endpoint, sslContext: context, reporter: reporter}, nil
 }
 
-func (self *lrscConnection) connect() error {
+func (self *lrscConnection) Connect() error {
 	err := self.establish()
 	return err
 }
 
-func (self *lrscConnection) loop() {
+func (self *lrscConnection) Loop() {
 	for {
 		line, err := self.readLine()
 		if err != nil {
@@ -99,7 +100,7 @@ func (self *lrscConnection) loop() {
 	}
 }
 
-func (self *lrscConnection) error() chan error {
+func (self *lrscConnection) Error() <-chan error {
 	return self.err
 }
 
@@ -117,7 +118,7 @@ func (self *lrscConnection) establish() error {
 
 	if err != nil {
 		logger.Error("Could not establish TCP connection: %v", err)
-		self.report("CONNECTION", err.Error())
+		self.Report("CONNECTION", err.Error())
 		return err
 	}
 	logger.Info("Connected successfully")
@@ -131,7 +132,7 @@ func (self *lrscConnection) establish() error {
 		return err
 	}
 
-	self.report("CONNECTION", "OK")
+	self.Report("CONNECTION", "OK")
 	return nil
 }
 

@@ -1,22 +1,23 @@
 package main
 
 import (
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/iotf"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
 	"os"
 )
 
 var logger = createLogger()
 var lrscClient lrscConnection
-var iotfClient iotfConnection
 
 func main() {
 	logger.Info("================ LRSC <-> IoTF bridge launched  ==================")
 
-	err := startBridge()
+	reporters, err := startBridge()
 	if err != nil {
 		logger.Fatal(err.Error())
 	}
 
-	setupHttp()
+	setupHttp(reporters)
 	err = startHttp()
 	if err != nil {
 		logger.Error(err.Error())
@@ -24,20 +25,28 @@ func main() {
 	}
 }
 
-func startBridge() error {
-	if err := setupIotfClient(); err != nil {
-		return err
+func startBridge() (map[string]*reporter.StatusReporter, error) {
+	appReporter := reporter.New()
+
+	brokerConnection, commands, events, err := setupIotfClient(&appReporter)
+	if err != nil {
+		return nil, err
 	}
 
 	if err := setupLrscClient(); err != nil {
-		return err
+		return nil, err
 	}
 
+	reporters := make(map[string]*reporter.StatusReporter)
+	reporters["app"] = &appReporter
+	reporters["lrsc"] = &lrscClient.StatusReporter
+	reporters["broker"] = &brokerConnection.StatusReporter
+
 	go runConnectionLoop("LRSC client", &lrscClient)
-	go runConnectionLoop("IoTF client", &iotfClient)
+	go runConnectionLoop("IoTF client", brokerConnection)
 
 	go func() {
-		for commandMessage := range iotfClient.commands {
+		for commandMessage := range commands {
 			logger.Debug("Received command message: %v", commandMessage)
 		}
 	}()
@@ -45,39 +54,42 @@ func startBridge() error {
 	go func() {
 		for {
 			message := <-lrscClient.inbound
-			iotfClient.publish(message.Deveui, message.Pdu)
+			event := iotf.Event{Device: message.Deveui, Payload: message.Pdu}
+			events <- event
 		}
 	}()
 
-	return nil
+	return reporters, nil
 }
 
-func setupIotfClient() error {
-	iotfClient.stats = make(map[string]string)
-
+func setupIotfClient(appReporter *reporter.StatusReporter) (*iotf.BrokerConnection, <-chan iotf.Command, chan<- iotf.Event, error) {
 	logger.Info("Starting IoTF connection")
-	iotfCreds, err := extractIotfCreds(os.Getenv("VCAP_SERVICES"))
+	iotfCreds, err := iotf.ExtractCredentials(os.Getenv("VCAP_SERVICES"))
 	if err != nil {
-		iotfClient.report("CONNECTION", err.Error())
-		return err
+		appReporter.Report("IoTF Credentials", err.Error())
+		return nil, nil, nil, err
 	}
-	iotfClient.initialise(iotfCreds, "LRSC")
 
-	return nil
+	commandChannel := make(chan iotf.Command)
+	eventChannel := make(chan iotf.Event)
+
+	brokerConnection := iotf.NewBrokerConnection(iotfCreds, eventChannel, commandChannel)
+
+	return brokerConnection, commandChannel, eventChannel, nil
 }
 
 func setupLrscClient() error {
-	lrscClient.stats = make(map[string]string)
+	lrscClient.StatusReporter = reporter.New()
 	dialerConfig := dialerConfig{
 		host: os.Getenv("LRSC_HOST"),
 		port: os.Getenv("LRSC_PORT"),
 		cert: os.Getenv("LRSC_CLIENT_CERT"),
 		key:  os.Getenv("LRSC_CLIENT_KEY"),
 	}
-	dialer, err := createTlsDialer(dialerConfig, &lrscClient.statusReporter)
+	dialer, err := createTlsDialer(dialerConfig, &lrscClient.StatusReporter)
 	if err != nil {
 		logger.Error("failed to create dialer: %v", err)
-		lrscClient.report("CONNECTION", err.Error())
+		lrscClient.Report("CONNECTION", err.Error())
 		return err
 	}
 

@@ -9,9 +9,9 @@ import (
 )
 
 type connection interface {
-	connect() error
-	error() chan error
-	loop()
+	Connect() error
+	Error() <-chan error
+	Loop()
 }
 
 func retryWithBackoff(name string, body func() error) {
@@ -34,9 +34,9 @@ func retryWithBackoff(name string, body func() error) {
 func runConnectionLoop(name string, conn connection) {
 	logger.Debug("starting conneciton loop " + name)
 	for {
-		retryWithBackoff(name, conn.connect)
-		go conn.loop()
-		err := <-conn.error()
+		retryWithBackoff(name, conn.Connect)
+		go conn.Loop()
+		err := <-conn.Error()
 		logger.Error(fmt.Sprintf("%v went tits up: %v", name, err))
 	}
 }
@@ -61,7 +61,7 @@ func createLogger() clogger.Logger {
 		}
 	}
 
-	logger.SetLevel(clogger.Info)
+	logger.SetLevel(clogger.Debug)
 
 	return logger
 }

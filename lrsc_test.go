@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	. "github.com/onsi/gomega"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
 	"io"
 	"testing"
 )
@@ -40,7 +41,7 @@ func TestValidateHandshake(t *testing.T) {
 type mockConnection struct {
 	readFunc  func() (string, error)
 	writeFunc func(string) error
-	statusReporter
+	reporter.StatusReporter
 }
 
 func (self *mockConnection) Read(b []byte) (n int, err error) {
@@ -71,7 +72,7 @@ func Test_LRSC_CanReceiveMessage(t *testing.T) {
 
 	testDialer := &testDialer{conn: mockConn}
 	lrscClient := &lrscConnection{dialer: testDialer}
-	lrscClient.stats = make(map[string]string)
+	lrscClient.StatusReporter = reporter.New()
 	lrscClient.inbound = make(chan lrscMessage)
 	go runConnectionLoop("LRSC Client", lrscClient)
 
@@ -103,7 +104,7 @@ func Test_LRSC_Reconnects(t *testing.T) {
 
 	testDialer := &testDialer{conn: mockConn}
 	lrscClient := &lrscConnection{dialer: testDialer}
-	lrscClient.stats = make(map[string]string)
+	lrscClient.StatusReporter = reporter.New()
 	lrscClient.inbound = make(chan lrscMessage)
 	go runConnectionLoop("LRSC Client", lrscClient)
 
@@ -117,8 +118,8 @@ func Test_LRSC_ReportsErrorIfConnectionFails(t *testing.T) {
 
 	failingDialer := &failingDialer{}
 	lrscClient := &lrscConnection{dialer: failingDialer}
-	lrscClient.stats = make(map[string]string)
+	lrscClient.StatusReporter = reporter.New()
 	lrscClient.establish()
 
-	Expect(lrscClient.stats["CONNECTION"]).To(Equal("FAILED"))
+	Expect(lrscClient.Summary()).To(Equal(`{"CONNECTION":"FAILED"}`))
 }
