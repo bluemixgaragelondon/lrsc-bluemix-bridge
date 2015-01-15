@@ -1,5 +1,5 @@
 #!/bin/bash -xe
 
-. script/env.dev
+source .env
 go build
 ./lrsc-bridge
