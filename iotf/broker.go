@@ -20,7 +20,6 @@ type iotfBroker struct {
 	reporter.StatusReporter
 	registrar deviceRegistrar
 	commands  chan<- Command
-	errChan   chan<- error
 }
 
 const (
@@ -50,7 +49,7 @@ func newIoTFBroker(credentials *Credentials, commands chan<- Command, errChan ch
 	clientOptions := newClientOptions(credentials, errChan)
 	client := mqtt.NewPahoClient(clientOptions)
 	registrar := iotfHttpRegistrar{credentials: *credentials}
-	return &iotfBroker{client: client, registrar: &registrar, commands: commands, errChan: errChan}
+	return &iotfBroker{client: client, registrar: &registrar, commands: commands}
 }
 
 func (self *iotfBroker) connect() error {

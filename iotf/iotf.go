@@ -10,8 +10,9 @@ import (
 var Logger clogger.Logger
 
 type IoTFManager struct {
-	broker Broker
-	events <-chan Event
+	broker  Broker
+	events  <-chan Event
+	errChan chan error
 }
 
 type Event struct {
@@ -40,7 +41,7 @@ func NewIoTFManager(vcapServices string, commands chan<- Command, events <-chan 
 
 	errChan := make(chan error)
 	broker := newIoTFBroker(iotfCreds, commands, errChan)
-	return &IoTFManager{broker: broker}, nil
+	return &IoTFManager{broker: broker, errChan: errChan}, nil
 }
 
 func (self *IoTFManager) Connect() {

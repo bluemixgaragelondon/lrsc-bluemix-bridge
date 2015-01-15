@@ -12,7 +12,6 @@ var _ = Describe("IoTF Broker", func() {
 		client         *mockClient
 		connection     *iotfBroker
 		commandChannel chan Command
-		errorChannel   chan error
 	)
 
 	BeforeEach(func() {
@@ -20,14 +19,12 @@ var _ = Describe("IoTF Broker", func() {
 		registrar := newMockRegistrar()
 
 		commandChannel = make(chan Command)
-		errorChannel = make(chan error)
 
-		connection = &iotfBroker{client: client, registrar: registrar, commands: commandChannel, errChan: errorChannel}
+		connection = &iotfBroker{client: client, registrar: registrar, commands: commandChannel}
 	})
 
 	AfterEach(func() {
 		close(commandChannel)
-		close(errorChannel)
 	})
 
 	Describe("connect", func() {
