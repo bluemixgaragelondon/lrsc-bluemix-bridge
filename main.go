@@ -37,10 +37,14 @@ func main() {
 func startBridge() (map[string]*reporter.StatusReporter, error) {
 	appReporter := reporter.New()
 
-	// brokerConnection, commands, events, err := setupIotfClient(&appReporter)
-	// if err != nil {
-	// return nil, err
-	// }
+	commands := make(chan iotf.Command)
+	events := make(chan iotf.Event)
+
+	iotfManager, err := iotf.NewIoTFManager(os.Getenv("VCAP_SERVICES"), commands, events)
+	if err != nil {
+		appReporter.Report("IoTF Manager:", err.Error())
+		return nil, err
+	}
 
 	if err := setupLrscClient(); err != nil {
 		return nil, err
@@ -49,43 +53,27 @@ func startBridge() (map[string]*reporter.StatusReporter, error) {
 	reporters := make(map[string]*reporter.StatusReporter)
 	reporters["app"] = &appReporter
 	reporters["lrsc"] = &lrscClient.StatusReporter
-	// reporters["broker"] = &brokerConnection.StatusReporter
+	// reporters["broker"] = iotfManager.broker.StatusReporter
 
 	go runConnectionLoop("LRSC client", &lrscClient)
-	// go runConnectionLoop("IoTF client", brokerConnection)
+	go runConnectionLoop("IoTF client", iotfManager)
 
-	// go func() {
-	// for commandMessage := range commands {
-	// logger.Debug("Received command message: %v", commandMessage)
-	// }
-	// }()
+	go func() {
+		for commandMessage := range commands {
+			logger.Debug("Received command message: %v", commandMessage)
+		}
+	}()
 
-	// go func() {
-	// for {
-	// message := <-lrscClient.inbound
-	// event := iotf.Event{Device: message.Deveui, Payload: message.Pdu}
-	// events <- event
-	// }
-	// }()
+	go func() {
+		for {
+			message := <-lrscClient.inbound
+			event := iotf.Event{Device: message.Deveui, Payload: message.Pdu}
+			events <- event
+		}
+	}()
 
 	return reporters, nil
 }
-
-// func setupIotfClient(appReporter *reporter.StatusReporter) (*iotf.BrokerConnection, <-chan iotf.Command, chan<- iotf.Event, error) {
-// logger.Info("Starting IoTF connection")
-// iotfCreds, err := iotf.ExtractCredentials(os.Getenv("VCAP_SERVICES"))
-// if err != nil {
-// appReporter.Report("IoTF Credentials", err.Error())
-// return nil, nil, nil, err
-// }
-
-// commandChannel := make(chan iotf.Command)
-// eventChannel := make(chan iotf.Event)
-
-// brokerConnection := iotf.NewBrokerConnection(iotfCreds, eventChannel, commandChannel)
-
-// return brokerConnection, commandChannel, eventChannel, nil
-// }
 
 func setupLrscClient() error {
 	lrscClient.StatusReporter = reporter.New()
