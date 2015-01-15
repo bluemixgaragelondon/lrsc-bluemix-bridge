@@ -35,12 +35,18 @@ var _ = Describe("Iotf", func() {
 
 	Describe("IoTFManager", func() {
 		var (
-			iotfManager *IoTFManager
-			mockBroker  *mockBroker
+			iotfManager   *IoTFManager
+			mockBroker    *mockBroker
+			eventsChannel chan Event
 		)
 		BeforeEach(func() {
+			eventsChannel = make(chan Event)
 			mockBroker = newMockBroker()
-			iotfManager = &IoTFManager{broker: mockBroker}
+			iotfManager = &IoTFManager{broker: mockBroker, events: eventsChannel}
+		})
+
+		AfterEach(func() {
+			close(eventsChannel)
 		})
 
 		Describe("Connect", func() {
@@ -51,14 +57,12 @@ var _ = Describe("Iotf", func() {
 		})
 		Describe("Loop", func() {
 			It("publishes events on the broker", func() {
-				events := make(chan Event)
-				iotfManager.events = events
 				go iotfManager.Loop()
 
 				event := Event{Device: "device", Payload: "message"}
 				eventRead := false
 				select {
-				case events <- event:
+				case eventsChannel <- event:
 					eventRead = true
 				case <-time.After(time.Millisecond * 1):
 					eventRead = false
@@ -67,25 +71,21 @@ var _ = Describe("Iotf", func() {
 				Expect(eventRead).To(BeTrue())
 				Expect(len(mockBroker.events)).To(Equal(1))
 				Expect(mockBroker.events[0]).To(Equal(event))
-				close(events)
 			})
 
 			It("loops", func() {
-				events := make(chan Event)
-				iotfManager.events = events
 				go iotfManager.Loop()
 
 				event := Event{Device: "device", Payload: "message"}
 
 				for i := 0; i < 5; i++ {
 					select {
-					case events <- event:
+					case eventsChannel <- event:
 					case <-time.After(time.Millisecond * 1):
 					}
 				}
 
 				Expect(len(mockBroker.events)).To(Equal(5))
-				close(events)
 			})
 
 		})
