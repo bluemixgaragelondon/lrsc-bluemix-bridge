@@ -1,15 +1,19 @@
 package main
 
 import (
+	"github.com/cromega/clogger"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/iotf"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
 	"os"
 )
 
-var logger = createLogger()
+var logger clogger.Logger
 var lrscClient lrscConnection
 
 func main() {
+	logger = createLogger()
+	iotf.Logger = logger
+
 	logger.Info("================ LRSC <-> IoTF bridge launched  ==================")
 
 	reporters, err := startBridge()
@@ -28,10 +32,10 @@ func main() {
 func startBridge() (map[string]*reporter.StatusReporter, error) {
 	appReporter := reporter.New()
 
-	brokerConnection, commands, events, err := setupIotfClient(&appReporter)
-	if err != nil {
-		return nil, err
-	}
+	// brokerConnection, commands, events, err := setupIotfClient(&appReporter)
+	// if err != nil {
+	// return nil, err
+	// }
 
 	if err := setupLrscClient(); err != nil {
 		return nil, err
@@ -40,43 +44,43 @@ func startBridge() (map[string]*reporter.StatusReporter, error) {
 	reporters := make(map[string]*reporter.StatusReporter)
 	reporters["app"] = &appReporter
 	reporters["lrsc"] = &lrscClient.StatusReporter
-	reporters["broker"] = &brokerConnection.StatusReporter
+	// reporters["broker"] = &brokerConnection.StatusReporter
 
 	go runConnectionLoop("LRSC client", &lrscClient)
-	go runConnectionLoop("IoTF client", brokerConnection)
+	// go runConnectionLoop("IoTF client", brokerConnection)
 
-	go func() {
-		for commandMessage := range commands {
-			logger.Debug("Received command message: %v", commandMessage)
-		}
-	}()
+	// go func() {
+	// for commandMessage := range commands {
+	// logger.Debug("Received command message: %v", commandMessage)
+	// }
+	// }()
 
-	go func() {
-		for {
-			message := <-lrscClient.inbound
-			event := iotf.Event{Device: message.Deveui, Payload: message.Pdu}
-			events <- event
-		}
-	}()
+	// go func() {
+	// for {
+	// message := <-lrscClient.inbound
+	// event := iotf.Event{Device: message.Deveui, Payload: message.Pdu}
+	// events <- event
+	// }
+	// }()
 
 	return reporters, nil
 }
 
-func setupIotfClient(appReporter *reporter.StatusReporter) (*iotf.BrokerConnection, <-chan iotf.Command, chan<- iotf.Event, error) {
-	logger.Info("Starting IoTF connection")
-	iotfCreds, err := iotf.ExtractCredentials(os.Getenv("VCAP_SERVICES"))
-	if err != nil {
-		appReporter.Report("IoTF Credentials", err.Error())
-		return nil, nil, nil, err
-	}
+// func setupIotfClient(appReporter *reporter.StatusReporter) (*iotf.BrokerConnection, <-chan iotf.Command, chan<- iotf.Event, error) {
+// logger.Info("Starting IoTF connection")
+// iotfCreds, err := iotf.ExtractCredentials(os.Getenv("VCAP_SERVICES"))
+// if err != nil {
+// appReporter.Report("IoTF Credentials", err.Error())
+// return nil, nil, nil, err
+// }
 
-	commandChannel := make(chan iotf.Command)
-	eventChannel := make(chan iotf.Event)
+// commandChannel := make(chan iotf.Command)
+// eventChannel := make(chan iotf.Event)
 
-	brokerConnection := iotf.NewBrokerConnection(iotfCreds, eventChannel, commandChannel)
+// brokerConnection := iotf.NewBrokerConnection(iotfCreds, eventChannel, commandChannel)
 
-	return brokerConnection, commandChannel, eventChannel, nil
-}
+// return brokerConnection, commandChannel, eventChannel, nil
+// }
 
 func setupLrscClient() error {
 	lrscClient.StatusReporter = reporter.New()
