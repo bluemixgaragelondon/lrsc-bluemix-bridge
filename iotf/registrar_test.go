@@ -24,7 +24,7 @@ var _ = Describe("Registrar", func() {
 				BaseUri:  server.URL()}
 
 			registrationPath = "/organizations/testorg/devices"
-			registrar = newRegistrar(credentials)
+			registrar = &iotfHttpRegistrar{credentials}
 
 		})
 

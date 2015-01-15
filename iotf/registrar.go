@@ -7,15 +7,16 @@ import (
 	"strings"
 )
 
-type deviceRegistrar struct {
+type deviceRegistrar interface {
+	registerDevice(deviceId, deviceType string) error
+}
+
+type iotfHttpRegistrar struct {
 	credentials Credentials
 }
 
-func newRegistrar(credentials Credentials) deviceRegistrar {
-	return deviceRegistrar{credentials}
-}
-
-func (self *deviceRegistrar) registerDevice(deviceId, deviceType string) error {
+func (self *iotfHttpRegistrar) registerDevice(deviceId, deviceType string) error {
+	Logger.Debug("Registering new device %v", deviceId)
 	url := fmt.Sprintf("%v/organizations/%v/devices", self.credentials.BaseUri, self.credentials.Org)
 	body := strings.NewReader(fmt.Sprintf(`{"id":"%v", "type": "%v"}`, deviceId, deviceType))
 	request, _ := http.NewRequest("POST", url, body)
@@ -29,10 +30,13 @@ func (self *deviceRegistrar) registerDevice(deviceId, deviceType string) error {
 
 	switch response.StatusCode {
 	case http.StatusCreated:
+		Logger.Debug("Device %v was registered", deviceId)
 		break
 	case http.StatusConflict:
+		Logger.Warning("Device %v was already registered", deviceId)
 		break
 	default:
+		Logger.Error("Unable to register device (http %v)", response.StatusCode)
 		return errors.New(fmt.Sprintf("Unable to create device, %d", response.StatusCode))
 	}
 
