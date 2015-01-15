@@ -55,7 +55,7 @@ func (self *IoTFManager) Loop() {
 }
 
 func (self *IoTFManager) Error() <-chan error {
-	return nil
+	return self.errChan
 }
 
 func extractCredentials(services string) (*Credentials, error) {

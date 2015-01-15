@@ -38,15 +38,18 @@ var _ = Describe("Iotf", func() {
 			iotfManager   *IoTFManager
 			mockBroker    *mockBroker
 			eventsChannel chan Event
+			errorsChannel chan error
 		)
 		BeforeEach(func() {
 			eventsChannel = make(chan Event)
+			errorsChannel = make(chan error)
 			mockBroker = newMockBroker()
-			iotfManager = &IoTFManager{broker: mockBroker, events: eventsChannel}
+			iotfManager = &IoTFManager{broker: mockBroker, events: eventsChannel, errChan: errorsChannel}
 		})
 
 		AfterEach(func() {
 			close(eventsChannel)
+			close(errorsChannel)
 		})
 
 		Describe("Connect", func() {
@@ -89,7 +92,12 @@ var _ = Describe("Iotf", func() {
 			})
 
 		})
-		Describe("Error", func() {})
+		Describe("Error", func() {
+			It("returns the managers read-only error channel", func() {
+				var errChan <-chan error = iotfManager.errChan
+				Expect(iotfManager.Error()).To(Equal(errChan))
+			})
+		})
 	})
 })
 
