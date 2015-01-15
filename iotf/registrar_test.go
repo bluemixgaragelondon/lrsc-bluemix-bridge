@@ -40,7 +40,7 @@ var _ = Describe("Registrar", func() {
 					ghttp.RespondWith(http.StatusCreated, nil, nil),
 				),
 			)
-			err := registrar.registerDevice("", "")
+			err := registrar.registerDevice("")
 			Expect(err).To(Succeed())
 		})
 
@@ -48,11 +48,11 @@ var _ = Describe("Registrar", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest("POST", registrationPath),
-					ghttp.VerifyJSON(`{"id":"123456789", "type": "TEST"}`),
+					ghttp.VerifyJSON(`{"id":"123456789", "type": "LRSC"}`),
 					ghttp.RespondWith(http.StatusCreated, nil, nil),
 				),
 			)
-			err := registrar.registerDevice("TEST", "123456789")
+			err := registrar.registerDevice("123456789")
 			Expect(err).To(Succeed())
 			Expect(server.ReceivedRequests()).To(HaveLen(1))
 		})
@@ -62,11 +62,11 @@ var _ = Describe("Registrar", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", registrationPath),
-						ghttp.VerifyJSON(`{"id":"123456789", "type": "TEST"}`),
+						ghttp.VerifyJSON(`{"id":"123456789", "type": "LRSC"}`),
 						ghttp.RespondWith(http.StatusCreated, nil, nil),
 					),
 				)
-				err := registrar.registerDevice("TEST", "123456789")
+				err := registrar.registerDevice("123456789")
 				Expect(err).To(Succeed())
 			})
 		})
@@ -76,11 +76,11 @@ var _ = Describe("Registrar", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", registrationPath),
-						ghttp.VerifyJSON(`{"id":"123456789", "type": "TEST"}`),
+						ghttp.VerifyJSON(`{"id":"123456789", "type": "LRSC"}`),
 						ghttp.RespondWith(http.StatusConflict, nil, nil),
 					),
 				)
-				err := registrar.registerDevice("TEST", "123456789")
+				err := registrar.registerDevice("123456789")
 				Expect(err).To(Succeed())
 			})
 		})
@@ -93,7 +93,7 @@ var _ = Describe("Registrar", func() {
 						ghttp.RespondWith(http.StatusInternalServerError, nil, nil),
 					),
 				)
-				err := registrar.registerDevice("", "")
+				err := registrar.registerDevice("")
 				Expect(err).To(HaveOccurred())
 			})
 		})

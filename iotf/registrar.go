@@ -8,14 +8,15 @@ import (
 )
 
 type deviceRegistrar interface {
-	registerDevice(deviceId, deviceType string) error
+	registerDevice(deviceId string) error
+	deviceRegistered(deviceId string) bool
 }
 
 type iotfHttpRegistrar struct {
 	credentials *Credentials
 }
 
-func (self *iotfHttpRegistrar) registerDevice(deviceType, deviceId string) error {
+func (self *iotfHttpRegistrar) registerDevice(deviceId string) error {
 	logger.Debug("Registering new device %v", deviceId)
 	url := fmt.Sprintf("%v/organizations/%v/devices", self.credentials.BaseUri, self.credentials.Org)
 	body := strings.NewReader(fmt.Sprintf(`{"id":"%v", "type": "%v"}`, deviceId, deviceType))
@@ -41,4 +42,8 @@ func (self *iotfHttpRegistrar) registerDevice(deviceType, deviceId string) error
 	}
 
 	return nil
+}
+
+func (self *iotfHttpRegistrar) deviceRegistered(deviceId string) bool {
+	return true
 }

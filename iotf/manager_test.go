@@ -129,7 +129,7 @@ func newMockDeviceRegistrar() *mockDeviceRegistrar {
 	return &mockDeviceRegistrar{devices: make(map[string]struct{})}
 }
 
-func (self *mockDeviceRegistrar) registerDevice(deviceType, deviceId string) error {
+func (self *mockDeviceRegistrar) registerDevice(deviceId string) error {
 	if self.fail {
 		return errors.New("")
 	}
