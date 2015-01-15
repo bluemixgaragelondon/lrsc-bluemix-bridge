@@ -70,6 +70,24 @@ var _ = Describe("Iotf", func() {
 				close(events)
 			})
 
+			It("loops", func() {
+				events := make(chan Event)
+				iotfManager.events = events
+				go iotfManager.Loop()
+
+				event := Event{Device: "device", Payload: "message"}
+
+				for i := 0; i < 5; i++ {
+					select {
+					case events <- event:
+					case <-time.After(time.Millisecond * 1):
+					}
+				}
+
+				Expect(len(mockBroker.events)).To(Equal(5))
+				close(events)
+			})
+
 		})
 		Describe("Error", func() {})
 	})

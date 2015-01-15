@@ -48,8 +48,9 @@ func (self *IoTFManager) Connect() {
 }
 
 func (self *IoTFManager) Loop() {
-	event := <-self.events
-	self.broker.publishMessageFromDevice(event)
+	for event := range self.events {
+		self.broker.publishMessageFromDevice(event)
+	}
 }
 
 func (self *IoTFManager) Error() <-chan error {
