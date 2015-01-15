@@ -32,21 +32,33 @@ var _ = Describe("Registrar", func() {
 			server.Close()
 		})
 
-		Context("the device is registered successfully", func() {
+		It("sends credentials", func() {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("POST", registrationPath),
+					ghttp.VerifyBasicAuth("testuser", "testpass"),
+					ghttp.RespondWith(http.StatusCreated, nil, nil),
+				),
+			)
+			err := registrar.registerDevice("", "")
+			Expect(err).To(Succeed())
+		})
 
-			It("sends credentials", func() {
-				server.AppendHandlers(
-					ghttp.CombineHandlers(
-						ghttp.VerifyRequest("POST", registrationPath),
-						ghttp.VerifyBasicAuth("testuser", "testpass"),
-						ghttp.RespondWith(http.StatusCreated, nil, nil),
-					),
-				)
-				err := registrar.registerDevice("", "")
-				Expect(err).To(Succeed())
-			})
+		It("POSTs the device information", func() {
+			server.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("POST", registrationPath),
+					ghttp.VerifyJSON(`{"id":"123456789", "type": "LRSC"}`),
+					ghttp.RespondWith(http.StatusCreated, nil, nil),
+				),
+			)
+			err := registrar.registerDevice("123456789", "LRSC")
+			Expect(err).To(Succeed())
+			Expect(server.ReceivedRequests()).To(HaveLen(1))
+		})
 
-			It("POSTs the device information", func() {
+		Context("the device is not in IoTF", func() {
+			It("succeeds", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", registrationPath),
@@ -56,11 +68,10 @@ var _ = Describe("Registrar", func() {
 				)
 				err := registrar.registerDevice("123456789", "LRSC")
 				Expect(err).To(Succeed())
-				Expect(server.ReceivedRequests()).To(HaveLen(1))
 			})
 		})
 
-		Context("the device already exists", func() {
+		Context("the device already exists in IoTF", func() {
 			It("succeeds", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
@@ -74,12 +85,12 @@ var _ = Describe("Registrar", func() {
 			})
 		})
 
-		Context("the device is not created", func() {
+		Context("the IoTF service is broken", func() {
 			It("returns an error", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", registrationPath),
-						ghttp.RespondWith(http.StatusForbidden, nil, nil),
+						ghttp.RespondWith(http.StatusInternalServerError, nil, nil),
 					),
 				)
 				err := registrar.registerDevice("", "")
