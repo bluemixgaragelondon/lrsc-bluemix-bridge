@@ -49,8 +49,8 @@ func NewIoTFManager(vcapServices string, commands chan<- Command, events <-chan 
 	return &IoTFManager{broker: broker, errChan: errChan}, nil
 }
 
-func (self *IoTFManager) Connect() {
-	self.broker.connect()
+func (self *IoTFManager) Connect() error {
+	return self.broker.connect()
 }
 
 func (self *IoTFManager) Loop() {

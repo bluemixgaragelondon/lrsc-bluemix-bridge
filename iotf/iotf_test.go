@@ -54,7 +54,7 @@ var _ = Describe("Iotf", func() {
 
 		Describe("Connect", func() {
 			It("calls connect on the broker", func() {
-				iotfManager.Connect()
+				Expect(iotfManager.Connect()).To(Succeed())
 				Expect(mockBroker.connected).To(BeTrue())
 			})
 		})
