@@ -120,16 +120,16 @@ func (self *mockBroker) publishMessageFromDevice(event Event) {
 	self.events = append(self.events, event)
 }
 
-type mockRegistrar struct {
+type mockDeviceRegistrar struct {
 	fail    bool
 	devices map[string]struct{}
 }
 
-func newMockRegistrar() *mockRegistrar {
-	return &mockRegistrar{devices: make(map[string]struct{})}
+func newMockDeviceRegistrar() *mockDeviceRegistrar {
+	return &mockDeviceRegistrar{devices: make(map[string]struct{})}
 }
 
-func (self *mockRegistrar) registerDevice(deviceType, deviceId string) error {
+func (self *mockDeviceRegistrar) registerDevice(deviceType, deviceId string) error {
 	if self.fail {
 		return errors.New("")
 	}

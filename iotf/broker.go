@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type Broker interface {
+type broker interface {
 	connect() error
 	publishMessageFromDevice(Event)
 }
@@ -48,7 +48,7 @@ func generateClientIdSuffix() string {
 func newIoTFBroker(credentials *Credentials, commands chan<- Command, errChan chan<- error) *iotfBroker {
 	clientOptions := newClientOptions(credentials, errChan)
 	client := mqtt.NewPahoClient(clientOptions)
-	registrar := iotfHttpRegistrar{credentials: *credentials}
+	registrar := iotfHttpRegistrar{credentials: credentials}
 	return &iotfBroker{client: client, registrar: &registrar, commands: commands}
 }
 

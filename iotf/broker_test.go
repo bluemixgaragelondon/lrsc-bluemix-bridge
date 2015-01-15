@@ -16,7 +16,7 @@ var _ = Describe("IoTF Broker", func() {
 
 	BeforeEach(func() {
 		client = NewMockClient()
-		registrar := newMockRegistrar()
+		registrar := newMockDeviceRegistrar()
 
 		commandChannel = make(chan Command)
 

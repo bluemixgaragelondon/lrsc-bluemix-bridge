@@ -12,7 +12,7 @@ type deviceRegistrar interface {
 }
 
 type iotfHttpRegistrar struct {
-	credentials Credentials
+	credentials *Credentials
 }
 
 func (self *iotfHttpRegistrar) registerDevice(deviceId, deviceType string) error {
