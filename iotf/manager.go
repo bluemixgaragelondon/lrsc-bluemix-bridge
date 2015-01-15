@@ -15,9 +15,10 @@ func init() {
 }
 
 type IoTFManager struct {
-	broker  Broker
-	events  <-chan Event
-	errChan chan error
+	broker          broker
+	deviceRegistrar deviceRegistrar
+	events          <-chan Event
+	errChan         chan error
 }
 
 type Event struct {
@@ -46,7 +47,8 @@ func NewIoTFManager(vcapServices string, commands chan<- Command, events <-chan 
 
 	errChan := make(chan error)
 	broker := newIoTFBroker(iotfCreds, commands, errChan)
-	return &IoTFManager{broker: broker, errChan: errChan}, nil
+	deviceRegistrar := &iotfHttpRegistrar{credentials: iotfCreds}
+	return &IoTFManager{broker: broker, deviceRegistrar: deviceRegistrar, errChan: errChan}, nil
 }
 
 func (self *IoTFManager) Connect() error {
@@ -56,6 +58,7 @@ func (self *IoTFManager) Connect() error {
 func (self *IoTFManager) Loop() {
 	for event := range self.events {
 		self.broker.publishMessageFromDevice(event)
+		self.deviceRegistrar.registerDevice("")
 	}
 }
 

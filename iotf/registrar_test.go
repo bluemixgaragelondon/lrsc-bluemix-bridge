@@ -8,30 +8,30 @@ import (
 )
 
 var _ = Describe("Registrar", func() {
+	var (
+		server           *ghttp.Server
+		registrar        deviceRegistrar
+		registrationPath string
+	)
+
+	BeforeEach(func() {
+		server = ghttp.NewServer()
+		credentials := Credentials{
+			User:     "testuser",
+			Password: "testpass",
+			Org:      "testorg",
+			BaseUri:  server.URL()}
+
+		registrationPath = "/organizations/testorg/devices"
+		registrar = &iotfHttpRegistrar{&credentials}
+
+	})
+
+	AfterEach(func() {
+		server.Close()
+	})
+
 	Describe("registerDevice", func() {
-		var (
-			server           *ghttp.Server
-			registrar        deviceRegistrar
-			registrationPath string
-		)
-
-		BeforeEach(func() {
-			server = ghttp.NewServer()
-			credentials := Credentials{
-				User:     "testuser",
-				Password: "testpass",
-				Org:      "testorg",
-				BaseUri:  server.URL()}
-
-			registrationPath = "/organizations/testorg/devices"
-			registrar = &iotfHttpRegistrar{&credentials}
-
-		})
-
-		AfterEach(func() {
-			server.Close()
-		})
-
 		It("sends credentials", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
@@ -98,5 +98,27 @@ var _ = Describe("Registrar", func() {
 			})
 		})
 
+	})
+
+	Describe("deviceRegistered", func() {
+		Context("the device has previously been registered", func() {
+			BeforeEach(func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", registrationPath),
+						ghttp.VerifyJSON(`{"id":"123456789", "type": "LRSC"}`),
+						ghttp.RespondWith(http.StatusCreated, nil, nil),
+					),
+				)
+				registrar.registerDevice("123456789")
+			})
+
+			It("returns true", func() {
+				Expect(registrar.deviceRegistered("123456789")).To(BeTrue())
+			})
+		})
+		Context("the device has not previously been registered", func() {
+			PIt("returns false", func() {})
+		})
 	})
 })

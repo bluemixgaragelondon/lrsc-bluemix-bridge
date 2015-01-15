@@ -35,16 +35,19 @@ var _ = Describe("Iotf", func() {
 
 	Describe("IoTFManager", func() {
 		var (
-			iotfManager   *IoTFManager
-			mockBroker    *mockBroker
-			eventsChannel chan Event
-			errorsChannel chan error
+			iotfManager         *IoTFManager
+			mockBroker          *mockBroker
+			mockDeviceRegistrar *mockDeviceRegistrar
+			eventsChannel       chan Event
+			errorsChannel       chan error
 		)
 		BeforeEach(func() {
 			eventsChannel = make(chan Event)
 			errorsChannel = make(chan error)
 			mockBroker = newMockBroker()
-			iotfManager = &IoTFManager{broker: mockBroker, events: eventsChannel, errChan: errorsChannel}
+			mockDeviceRegistrar = newMockDeviceRegistrar()
+			iotfManager = &IoTFManager{broker: mockBroker, deviceRegistrar: mockDeviceRegistrar,
+				events: eventsChannel, errChan: errorsChannel}
 		})
 
 		AfterEach(func() {
@@ -58,6 +61,7 @@ var _ = Describe("Iotf", func() {
 				Expect(mockBroker.connected).To(BeTrue())
 			})
 		})
+
 		Describe("Loop", func() {
 			It("publishes events on the broker", func() {
 				go iotfManager.Loop()
@@ -89,6 +93,23 @@ var _ = Describe("Iotf", func() {
 				}
 
 				Expect(len(mockBroker.events)).To(Equal(5))
+			})
+
+			Describe("device registration", func() {
+				It("adds a device", func() {})
+				It("doesn't add a device that has already been seen", func() {})
+			})
+
+			It("registers devices that have not yet been seen", func() {
+				go iotfManager.Loop()
+
+				event := Event{Device: "unseen", Payload: "message"}
+				select {
+				case eventsChannel <- event:
+				case <-time.After(time.Millisecond * 1):
+				}
+
+				Expect(len(mockDeviceRegistrar.devices)).To(Equal(1))
 			})
 
 		})
@@ -136,4 +157,9 @@ func (self *mockDeviceRegistrar) registerDevice(deviceId string) error {
 
 	self.devices[deviceId] = struct{}{}
 	return nil
+}
+
+func (self *mockDeviceRegistrar) deviceRegistered(deviceId string) bool {
+	_, present := self.devices[deviceId]
+	return present
 }
