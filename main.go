@@ -1,18 +1,23 @@
 package main
 
 import (
+	"fmt"
 	"github.com/cromega/clogger"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/iotf"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/utils"
 	"os"
+	"time"
 )
 
 var logger clogger.Logger
 var lrscClient lrscConnection
 
+func init() {
+	logger = utils.CreateLogger()
+}
+
 func main() {
-	logger = createLogger()
-	iotf.Logger = logger
 
 	logger.Info("================ LRSC <-> IoTF bridge launched  ==================")
 
@@ -102,4 +107,37 @@ func setupLrscClient() error {
 	lrscClient.inbound = make(chan lrscMessage, 100)
 
 	return nil
+}
+
+type connection interface {
+	Connect() error
+	Error() <-chan error
+	Loop()
+}
+
+func retryWithBackoff(name string, body func() error) {
+	for timeout := time.Second; ; timeout *= 2 {
+		logger.Debug("starting " + name)
+		if timeout > time.Minute*5 {
+			timeout = time.Minute * 5
+		}
+
+		err := body()
+		if err == nil {
+			return
+		} else {
+			time.Sleep(timeout)
+			logger.Debug("connection failed, retrying " + name)
+		}
+	}
+}
+
+func runConnectionLoop(name string, conn connection) {
+	logger.Debug("starting connection loop " + name)
+	for {
+		retryWithBackoff(name, conn.Connect)
+		go conn.Loop()
+		err := <-conn.Error()
+		logger.Error(fmt.Sprintf("%v went tits up: %v", name, err))
+	}
 }

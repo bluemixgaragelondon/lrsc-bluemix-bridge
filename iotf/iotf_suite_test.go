@@ -10,7 +10,6 @@ import (
 func TestIotf(t *testing.T) {
 	RegisterFailHandler(Fail)
 
-	Logger = clogger.CreateIoWriter(nil)
-	Logger.SetLevel(clogger.Off)
+	logger.SetLevel(clogger.Off)
 	RunSpecs(t, "IoTF Suite")
 }

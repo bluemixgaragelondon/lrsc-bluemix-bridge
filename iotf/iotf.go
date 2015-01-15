@@ -5,9 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cromega/clogger"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/utils"
 )
 
-var Logger clogger.Logger
+var logger clogger.Logger
+
+func init() {
+	logger = utils.CreateLogger()
+}
 
 type IoTFManager struct {
 	broker  Broker
@@ -67,12 +72,12 @@ func extractCredentials(services string) (*Credentials, error) {
 
 	err := json.Unmarshal([]byte(services), &data)
 	if err != nil {
-		Logger.Error("Could not parse services JSON: %v", err)
+		logger.Error("Could not parse services JSON: %v", err)
 		return nil, fmt.Errorf("Could not parse services JSON: %v", err)
 	}
 
 	if len(data.Services) == 0 {
-		Logger.Error("Could not find any iotf-service instance bound")
+		logger.Error("Could not find any iotf-service instance bound")
 		return nil, errors.New("Could not find any iotf-service instance bound")
 	}
 

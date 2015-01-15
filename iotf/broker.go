@@ -33,7 +33,7 @@ func newClientOptions(credentials *Credentials, errChan chan<- error) mqtt.Clien
 		Username: credentials.User,
 		Password: credentials.Password,
 		OnConnectionLost: func(err error) {
-			Logger.Error("IoTF connection lost handler called: " + err.Error())
+			logger.Error("IoTF connection lost handler called: " + err.Error())
 			errChan <- errors.New("IoTF connection lost handler called: " + err.Error())
 		},
 	}
@@ -59,13 +59,13 @@ func (self *iotfBroker) connect() error {
 		return err
 	}
 
-	Logger.Info("Connected to MQTT")
+	logger.Info("Connected to MQTT")
 	return self.subscribeToCommandMessages(self.commands)
 }
 
 func (self *iotfBroker) publishMessageFromDevice(event Event) {
 	topic := fmt.Sprintf("iot-2/type/%v/id/%v/evt/TEST/fmt/json", deviceType, event.Device)
-	Logger.Debug("publishing event on topic %v: %v", topic, event)
+	logger.Debug("publishing event on topic %v: %v", topic, event)
 	self.client.PublishMessage(topic, []byte(event.Payload))
 }
 
@@ -74,7 +74,7 @@ func (self *iotfBroker) subscribeToCommandMessages(commands chan<- Command) erro
 	return self.client.StartSubscription(topic, func(message mqtt.Message) {
 		device := extractDeviceFromCommandTopic(message.Topic())
 		command := Command{Device: device, Payload: string(message.Payload())}
-		Logger.Debug("received command message for %v", command.Device)
+		logger.Debug("received command message for %v", command.Device)
 		commands <- command
 	})
 }
