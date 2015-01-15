@@ -48,11 +48,11 @@ var _ = Describe("Registrar", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest("POST", registrationPath),
-					ghttp.VerifyJSON(`{"id":"123456789", "type": "LRSC"}`),
+					ghttp.VerifyJSON(`{"id":"123456789", "type": "TEST"}`),
 					ghttp.RespondWith(http.StatusCreated, nil, nil),
 				),
 			)
-			err := registrar.registerDevice("123456789", "LRSC")
+			err := registrar.registerDevice("TEST", "123456789")
 			Expect(err).To(Succeed())
 			Expect(server.ReceivedRequests()).To(HaveLen(1))
 		})
@@ -62,11 +62,11 @@ var _ = Describe("Registrar", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", registrationPath),
-						ghttp.VerifyJSON(`{"id":"123456789", "type": "LRSC"}`),
+						ghttp.VerifyJSON(`{"id":"123456789", "type": "TEST"}`),
 						ghttp.RespondWith(http.StatusCreated, nil, nil),
 					),
 				)
-				err := registrar.registerDevice("123456789", "LRSC")
+				err := registrar.registerDevice("TEST", "123456789")
 				Expect(err).To(Succeed())
 			})
 		})
@@ -76,11 +76,11 @@ var _ = Describe("Registrar", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", registrationPath),
-						ghttp.VerifyJSON(`{"id":"123456789", "type": "LRSC"}`),
+						ghttp.VerifyJSON(`{"id":"123456789", "type": "TEST"}`),
 						ghttp.RespondWith(http.StatusConflict, nil, nil),
 					),
 				)
-				err := registrar.registerDevice("123456789", "LRSC")
+				err := registrar.registerDevice("TEST", "123456789")
 				Expect(err).To(Succeed())
 			})
 		})
