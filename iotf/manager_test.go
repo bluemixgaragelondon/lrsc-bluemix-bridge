@@ -62,23 +62,6 @@ var _ = Describe("IotfManager", func() {
 	})
 
 	Describe("Loop", func() {
-		It("publishes events on the broker", func() {
-			go iotfManager.Loop()
-
-			event := Event{Device: "device", Payload: "message"}
-			eventRead := false
-			select {
-			case eventsChannel <- event:
-				eventRead = true
-			case <-time.After(time.Millisecond * 1):
-				eventRead = false
-			}
-
-			Expect(eventRead).To(BeTrue())
-			Expect(len(mockBroker.events)).To(Equal(1))
-			Expect(mockBroker.events[0]).To(Equal(event))
-		})
-
 		It("loops", func() {
 			go iotfManager.Loop()
 
@@ -92,6 +75,20 @@ var _ = Describe("IotfManager", func() {
 			}
 
 			Expect(len(mockBroker.events)).To(Equal(5))
+		})
+
+		Context("when an event is received", func() {
+			It("publishes to the broker", func() {
+				event := Event{Device: "device", Payload: "message"}
+
+				go iotfManager.Loop()
+				select {
+				case eventsChannel <- event:
+				case <-time.After(time.Millisecond * 1):
+				}
+
+				Expect(mockBroker.events).To(Equal([]Event{event}))
+			})
 		})
 
 		Describe("device registration", func() {
