@@ -55,9 +55,16 @@ var _ = Describe("IotfManager", func() {
 	})
 
 	Describe("Connect", func() {
-		It("calls connect on the broker", func() {
+		It("succeeds when broker connects", func() {
+			mockBroker.connected = true
+
 			Expect(iotfManager.Connect()).To(Succeed())
-			Expect(mockBroker.connected).To(BeTrue())
+		})
+
+		It("fails when broker does not connect", func() {
+			mockBroker.connected = false
+
+			Expect(iotfManager.Connect()).ToNot(Succeed())
 		})
 	})
 
@@ -128,7 +135,9 @@ func newMockBroker() *mockBroker {
 }
 
 func (self *mockBroker) connect() error {
-	self.connected = true
+	if !self.connected {
+		return errors.New("failed to connect")
+	}
 	return nil
 }
 
@@ -137,7 +146,7 @@ func (self *mockBroker) publishMessageFromDevice(event Event) {
 }
 
 type mockDeviceRegistrar struct {
-	fail    bool
+	connect bool
 	devices map[string]struct{}
 }
 
@@ -146,7 +155,7 @@ func newMockDeviceRegistrar() *mockDeviceRegistrar {
 }
 
 func (self *mockDeviceRegistrar) registerDevice(deviceId string) error {
-	if self.fail {
+	if self.connect {
 		return errors.New("")
 	}
 
