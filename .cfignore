@@ -1,0 +1,7 @@
+.cf/
+.env
+.secrets
+README.md
+scripts/
+script
+
