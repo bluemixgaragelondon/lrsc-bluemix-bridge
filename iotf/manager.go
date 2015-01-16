@@ -47,7 +47,7 @@ func NewIoTFManager(vcapServices string, commands chan<- Command, events <-chan 
 
 	errChan := make(chan error)
 	broker := newIoTFBroker(iotfCreds, commands, errChan)
-	deviceRegistrar := &iotfHttpRegistrar{credentials: iotfCreds}
+	deviceRegistrar := newIotfHttpRegistrar(iotfCreds)
 	return &IoTFManager{broker: broker, deviceRegistrar: deviceRegistrar, errChan: errChan}, nil
 }
 

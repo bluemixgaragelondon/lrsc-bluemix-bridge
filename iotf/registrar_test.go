@@ -23,7 +23,7 @@ var _ = Describe("Registrar", func() {
 			BaseUri:  server.URL()}
 
 		registrationPath = "/organizations/testorg/devices"
-		registrar = &iotfHttpRegistrar{&credentials}
+		registrar = newIotfHttpRegistrar(&credentials)
 
 	})
 
@@ -118,7 +118,9 @@ var _ = Describe("Registrar", func() {
 			})
 		})
 		Context("the device has not previously been registered", func() {
-			PIt("returns false", func() {})
+			It("returns false", func() {
+				Expect(registrar.deviceRegistered("123456789")).To(BeFalse())
+			})
 		})
 	})
 })

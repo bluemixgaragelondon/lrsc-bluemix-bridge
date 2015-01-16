@@ -13,7 +13,13 @@ type deviceRegistrar interface {
 }
 
 type iotfHttpRegistrar struct {
-	credentials *Credentials
+	credentials       *Credentials
+	devicesRegistered map[string]struct{}
+}
+
+func newIotfHttpRegistrar(credentials *Credentials) *iotfHttpRegistrar {
+	devicesRegistered := make(map[string]struct{})
+	return &iotfHttpRegistrar{credentials: credentials, devicesRegistered: devicesRegistered}
 }
 
 func (self *iotfHttpRegistrar) registerDevice(deviceId string) error {
@@ -41,9 +47,11 @@ func (self *iotfHttpRegistrar) registerDevice(deviceId string) error {
 		return errors.New(fmt.Sprintf("Unable to create device, %d", response.StatusCode))
 	}
 
+	self.devicesRegistered[deviceId] = struct{}{}
 	return nil
 }
 
 func (self *iotfHttpRegistrar) deviceRegistered(deviceId string) bool {
-	return true
+	_, deviceRegistered := self.devicesRegistered[deviceId]
+	return deviceRegistered
 }
