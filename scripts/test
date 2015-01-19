@@ -1,8 +1,37 @@
-#!/bin/bash
+#!/bin/bash -e
 
-which ginkgo 2>&- || go get github.com/onsi/ginkgo/ginkgo
+GOPATH="${GOPATH:?must be defined}"
+APP_PKG_NAME="hub.jazz.net/git/bluemixgarage/lrsc-bridge"
+ARGS="$@"
 
-cd "${GOPATH}/src/hub.jazz.net/git/bluemixgarage/lrsc-bridge"
-godep restore
+main() {
+	debug
+	install_test_dependencies
+	within_app use_vendored_packages
+	within_app run_tests
+}
 
-ginkgo "$@" -r
+debug() {
+	[ -z "$DEBUG" ] || set -x
+}
+
+install_test_dependencies() {
+	which godep 2>&1 > /dev/null || go get github.com/tools/godep
+	which ginkgo 2>&1 > /dev/null || go get github.com/onsi/ginkgo/ginkgo
+}
+
+within_app() {
+	pushd "${GOPATH}/src/${APP_PKG_NAME}"
+		"$@"
+	popd
+}
+
+use_vendored_packages() {
+	godep restore
+}
+
+run_tests() {
+	ginkgo $ARGS -r
+}
+
+main
