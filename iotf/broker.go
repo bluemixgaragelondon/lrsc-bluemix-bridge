@@ -57,11 +57,20 @@ func (self *iotfBroker) connect() error {
 	var err error
 	err = self.client.Start()
 	if err != nil {
+		self.Report("CONNECTION", err.Error())
 		return err
 	}
 
+	self.Report("CONNECTION", "OK")
+
 	logger.Info("Connected to MQTT")
-	return self.subscribeToCommandMessages(self.commands)
+	err = self.subscribeToCommandMessages(self.commands)
+	if err != nil {
+		self.Report("SUBSCRIPTION", err.Error())
+		return err
+	}
+	self.Report("SUBSCRIPTION", "OK")
+	return nil
 }
 
 func (self *iotfBroker) statusReporter() *reporter.StatusReporter {
