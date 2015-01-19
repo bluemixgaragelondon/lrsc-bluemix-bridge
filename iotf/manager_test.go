@@ -4,6 +4,8 @@ import (
 	"errors"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
 	"time"
 )
 
@@ -138,6 +140,10 @@ func (self *mockBroker) connect() error {
 	if !self.connected {
 		return errors.New("failed to connect")
 	}
+	return nil
+}
+
+func (self *mockBroker) statusReporter() *reporter.StatusReporter {
 	return nil
 }
 

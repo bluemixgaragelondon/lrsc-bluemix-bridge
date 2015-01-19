@@ -12,6 +12,7 @@ import (
 
 type broker interface {
 	connect() error
+	statusReporter() *reporter.StatusReporter
 	publishMessageFromDevice(Event)
 }
 
@@ -61,6 +62,10 @@ func (self *iotfBroker) connect() error {
 
 	logger.Info("Connected to MQTT")
 	return self.subscribeToCommandMessages(self.commands)
+}
+
+func (self *iotfBroker) statusReporter() *reporter.StatusReporter {
+	return &self.StatusReporter
 }
 
 func (self *iotfBroker) publishMessageFromDevice(event Event) {

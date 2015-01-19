@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cromega/clogger"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/utils"
 )
 
@@ -64,6 +65,10 @@ func (self *IoTFManager) Loop() {
 
 func (self *IoTFManager) Error() <-chan error {
 	return self.errChan
+}
+
+func (self *IoTFManager) StatusReporter() *reporter.StatusReporter {
+	return self.broker.statusReporter()
 }
 
 func extractCredentials(services string) (*Credentials, error) {
