@@ -10,17 +10,17 @@ main() {
 setup_client_cert_and_key() {
   BASE_PATH="${BASE_PATH:?must be defined}"
 
-  pushd $BASE_PATH
+  pushd "$BASE_PATH"
     if [ ! -e client.cert ]
     then
       CLIENT_CERT="${CLIENT_CERT:?must be defined}"
-      ln -nf "$CLIENT_CERT"
+      cp "$CLIENT_CERT" .
     fi
 
     if [ ! -e client.cert ]
     then
       CLIENT_KEY="${CLIENT_KEY:?must be defined}"
-      ln -nf "$CLIENT_KEY"
+      cp "$CLIENT_KEY" .
     fi
   popd
 }
