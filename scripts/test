@@ -1,6 +1,8 @@
 #!/bin/bash
 
-go get github.com/onsi/ginkgo/ginkgo
-go get github.com/onsi/gomega
+which ginkgo 2>&- || go get github.com/onsi/ginkgo/ginkgo
+
+cd "${GOPATH}/src/hub.jazz.net/git/bluemixgarage/lrsc-bridge"
+godep restore
 
 ginkgo "$@" -r
