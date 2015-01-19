@@ -1,18 +1,26 @@
 #!/bin/bash -e
 
-GOPATH="${GOPATH:?must be defined}"
 APP_PKG_NAME="hub.jazz.net/git/bluemixgarage/lrsc-bridge"
 ARGS="$@"
 
 main() {
-	debug
+	. scripts/run_with_env
+	set_gopath
 	install_test_dependencies
 	within_app use_vendored_packages
 	within_app run_tests
 }
 
-debug() {
-	[ -z "$DEBUG" ] || set -x
+set_gopath() {
+	if [ -z "$WORKSPACE" ]
+	then
+		GOPATH="${GOPATH:?must be defined}"
+	else
+		GOPATH="$WORKSPACE"
+	fi
+
+	export GOPATH
+	export PATH="${GOPATH}/bin:${PATH}"
 }
 
 install_test_dependencies() {
