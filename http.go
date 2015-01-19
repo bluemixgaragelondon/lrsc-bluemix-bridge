@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func setupHttp(reporters map[string]*reporter.StatusReporter) {
+func setupHttp(reporters map[string]reporter.StatusReporter) {
 	http.Handle("/", http.FileServer(http.Dir("web")))
 	http.HandleFunc("/env", env)
 

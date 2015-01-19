@@ -5,14 +5,14 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("reporter", func() {
+var _ = Describe("Bridge Reporter", func() {
 	Describe("Report", func() {
 		var (
-			reporter StatusReporter
+			reporter BridgeReporter
 		)
 
 		BeforeEach(func() {
-			reporter = StatusReporter{stats: make(map[string]string)}
+			reporter = BridgeReporter{stats: make(map[string]string)}
 		})
 
 		It("adds value to the report", func() {

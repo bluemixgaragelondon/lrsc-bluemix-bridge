@@ -67,7 +67,7 @@ func (self *IoTFManager) Error() <-chan error {
 	return self.errChan
 }
 
-func (self *IoTFManager) StatusReporter() *reporter.StatusReporter {
+func (self *IoTFManager) StatusReporter() reporter.StatusReporter {
 	return self.broker.statusReporter()
 }
 

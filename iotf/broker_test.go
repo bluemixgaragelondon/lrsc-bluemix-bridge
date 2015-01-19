@@ -17,10 +17,11 @@ var _ = Describe("IoTF Broker", func() {
 	BeforeEach(func() {
 		client = NewMockClient()
 		registrar := newMockDeviceRegistrar()
+		reporter := &mockStatusReporter{}
 
 		commandChannel = make(chan Command)
 
-		connection = &iotfBroker{client: client, registrar: registrar, commands: commandChannel}
+		connection = &iotfBroker{client: client, registrar: registrar, commands: commandChannel, StatusReporter: reporter}
 	})
 
 	AfterEach(func() {
@@ -154,4 +155,12 @@ func (self message) Topic() string {
 
 func (self message) Payload() []byte {
 	return self.payload
+}
+
+type mockStatusReporter struct{}
+
+func (self *mockStatusReporter) Report(key, value string) {}
+
+func (self *mockStatusReporter) Summary() string {
+	return ""
 }

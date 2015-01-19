@@ -4,19 +4,24 @@ import (
 	"encoding/json"
 )
 
-type StatusReporter struct {
+type StatusReporter interface {
+	Report(key, value string)
+	Summary() string
+}
+
+type BridgeReporter struct {
 	stats map[string]string
 }
 
-func (self *StatusReporter) Report(key, value string) {
+func (self *BridgeReporter) Report(key, value string) {
 	self.stats[key] = value
 }
 
-func (self StatusReporter) Summary() string {
+func (self *BridgeReporter) Summary() string {
 	summary, _ := json.Marshal(self.stats)
 	return string(summary)
 }
 
 func New() StatusReporter {
-	return StatusReporter{stats: make(map[string]string)}
+	return &BridgeReporter{stats: make(map[string]string)}
 }

@@ -12,7 +12,7 @@ import (
 
 type broker interface {
 	connect() error
-	statusReporter() *reporter.StatusReporter
+	statusReporter() reporter.StatusReporter
 	publishMessageFromDevice(Event)
 }
 
@@ -50,7 +50,8 @@ func newIoTFBroker(credentials *Credentials, commands chan<- Command, errChan ch
 	clientOptions := newClientOptions(credentials, errChan)
 	client := mqtt.NewPahoClient(clientOptions)
 	registrar := iotfHttpRegistrar{credentials: credentials}
-	return &iotfBroker{client: client, registrar: &registrar, commands: commands}
+	reporter := reporter.New()
+	return &iotfBroker{client: client, registrar: &registrar, commands: commands, StatusReporter: reporter}
 }
 
 func (self *iotfBroker) connect() error {
@@ -73,8 +74,8 @@ func (self *iotfBroker) connect() error {
 	return nil
 }
 
-func (self *iotfBroker) statusReporter() *reporter.StatusReporter {
-	return &self.StatusReporter
+func (self *iotfBroker) statusReporter() reporter.StatusReporter {
+	return self.StatusReporter
 }
 
 func (self *iotfBroker) publishMessageFromDevice(event Event) {

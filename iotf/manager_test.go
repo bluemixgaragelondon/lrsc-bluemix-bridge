@@ -143,7 +143,7 @@ func (self *mockBroker) connect() error {
 	return nil
 }
 
-func (self *mockBroker) statusReporter() *reporter.StatusReporter {
+func (self *mockBroker) statusReporter() reporter.StatusReporter {
 	return nil
 }
 

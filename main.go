@@ -34,7 +34,7 @@ func main() {
 	}
 }
 
-func startBridge() (map[string]*reporter.StatusReporter, error) {
+func startBridge() (map[string]reporter.StatusReporter, error) {
 	appReporter := reporter.New()
 
 	commands := make(chan iotf.Command)
@@ -50,9 +50,9 @@ func startBridge() (map[string]*reporter.StatusReporter, error) {
 		return nil, err
 	}
 
-	reporters := make(map[string]*reporter.StatusReporter)
-	reporters["app"] = &appReporter
-	reporters["lrsc"] = &lrscClient.StatusReporter
+	reporters := make(map[string]reporter.StatusReporter)
+	reporters["app"] = appReporter
+	reporters["lrsc"] = lrscClient.StatusReporter
 	reporters["iotf"] = iotfManager.StatusReporter()
 
 	go runConnectionLoop("LRSC client", &lrscClient)
