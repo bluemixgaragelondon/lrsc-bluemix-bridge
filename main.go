@@ -53,7 +53,7 @@ func startBridge() (map[string]*reporter.StatusReporter, error) {
 	reporters := make(map[string]*reporter.StatusReporter)
 	reporters["app"] = &appReporter
 	reporters["lrsc"] = &lrscClient.StatusReporter
-	reporters["broker"] = iotfManager.StatusReporter()
+	reporters["iotf"] = iotfManager.StatusReporter()
 
 	go runConnectionLoop("LRSC client", &lrscClient)
 	go runConnectionLoop("IoTF client", iotfManager)

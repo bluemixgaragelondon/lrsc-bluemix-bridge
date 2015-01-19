@@ -13,12 +13,18 @@ func setupHttp(reporters map[string]*reporter.StatusReporter) {
 
 	http.HandleFunc("/iotfStatus", func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(res, "%v", reporters["iotf"].Summary())
+		reporter, present := reporters["iotf"]
+		if present {
+			fmt.Fprintf(res, "%v", reporter.Summary())
+		}
 	})
 
 	http.HandleFunc("/lrscStatus", func(res http.ResponseWriter, req *http.Request) {
 		res.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(res, "%v", reporters["lrsc"].Summary())
+		reporter, present := reporters["lrsc"]
+		if present {
+			fmt.Fprintf(res, "%v", reporter.Summary())
+		}
 	})
 }
 
