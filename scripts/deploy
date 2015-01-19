@@ -17,7 +17,7 @@ setup_client_cert_and_key() {
       cp "$CLIENT_CERT" .
     fi
 
-    if [ ! -e client.cert ]
+    if [ ! -e client.key ]
     then
       CLIENT_KEY="${CLIENT_KEY:?must be defined}"
       cp "$CLIENT_KEY" .
