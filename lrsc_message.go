@@ -4,11 +4,19 @@ import (
 	"encoding/json"
 )
 
-type lrscMessageMode int
+type (
+	lrscMessageMode int
+
+	lrscMessageType int
+)
 
 const (
 	messageModeUnconfirmed lrscMessageMode = 0
 	messageModeConfirmed   lrscMessageMode = 2
+
+	messageTypeHandshake  lrscMessageType = 0
+	messageTypeUpstream   lrscMessageType = 6
+	messageTypeDownstream lrscMessageType = 7
 )
 
 type lrscMessage struct {

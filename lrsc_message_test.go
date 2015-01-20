@@ -17,6 +17,20 @@ var _ = Describe("LrscMessage", func() {
 		})
 	})
 
+	Describe("message types", func() {
+		It("handshake", func() {
+			Expect(messageTypeHandshake).To(Equal(lrscMessageType(0)))
+		})
+
+		It("upstream", func() {
+			Expect(messageTypeUpstream).To(Equal(lrscMessageType(6)))
+		})
+
+		It("downstream", func() {
+			Expect(messageTypeDownstream).To(Equal(lrscMessageType(7)))
+		})
+	})
+
 	Describe("encoding to json", func() {
 		It("results in valid LRSC JSON", func() {
 			m := lrscMessage{
