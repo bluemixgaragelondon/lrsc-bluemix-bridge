@@ -26,10 +26,6 @@ type Event struct {
 	Device, Payload string
 }
 
-type Command struct {
-	Device, Payload string
-}
-
 type Credentials struct {
 	User             string `json:"apiKey"`
 	Password         string `json:"apiToken"`
