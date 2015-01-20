@@ -20,6 +20,7 @@ const (
 )
 
 type lrscMessage struct {
+	Type             lrscMessageType `json:"msgtag"`
 	DeviceGuid       string          `json:"deveui"`
 	Payload          string          `json:"pdu"`
 	UniqueSequenceNo int             `json:"seqno"`

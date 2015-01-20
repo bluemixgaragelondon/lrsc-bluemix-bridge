@@ -34,6 +34,7 @@ var _ = Describe("LrscMessage", func() {
 	Describe("encoding to json", func() {
 		It("results in valid LRSC JSON", func() {
 			m := lrscMessage{
+				Type:             6,
 				DeviceGuid:       "AA-AA",
 				Payload:          "test",
 				UniqueSequenceNo: 658,
@@ -45,6 +46,7 @@ var _ = Describe("LrscMessage", func() {
 			mJson, _ := json.Marshal(m)
 
 			Expect(mJson).To(MatchJSON(`{
+				"msgtag": 6,
 				"deveui":"AA-AA",
 				"pdu":"test",
 				"seqno":658,
