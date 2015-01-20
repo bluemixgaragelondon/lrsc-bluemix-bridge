@@ -143,7 +143,7 @@ func (self *lrscConnection) handshake() error {
 		return err
 	}
 
-	hello := `{"msgtag":1,"eui":"FF-00-00-00-00-00-00-00","euidom":0,"major":1,"minor":0,"build":0,"name":"LRSC Client"}` + "\n\n"
+	hello := `{"msgtag":1,"eui":"FF-00-00-00-00-00-00-00","euidom":0,"major":1,"minor":0,"build":0,"name":"LRSC Client"}`
 	err = self.send(hello)
 	if err != nil {
 		logger.Error("handshake failed: " + err.Error())
@@ -166,7 +166,7 @@ func (self *lrscConnection) handshake() error {
 }
 
 func (self *lrscConnection) send(message string) error {
-	data := []byte(message)
+	data := []byte(message + "\n\n")
 
 	_, err := self.conn.Write(data)
 	if err == nil {
