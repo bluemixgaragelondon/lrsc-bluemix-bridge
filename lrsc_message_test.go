@@ -17,8 +17,8 @@ var _ = Describe("LrscMessage", func() {
 		})
 	})
 
-	Describe("toJson", func() {
-		It("encodes to valid JSON", func() {
+	Describe("encoding to json", func() {
+		It("results in valid LRSC JSON", func() {
 			m := lrscMessage{
 				DeviceGuid:       "AA-AA",
 				Payload:          "test",
