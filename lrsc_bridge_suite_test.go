@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/cromega/clogger"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -10,5 +11,6 @@ import (
 func TestLrscBridge(t *testing.T) {
 	RegisterFailHandler(Fail)
 
+	logger.SetLevel(clogger.Off)
 	RunSpecs(t, "LrscBridge Suite")
 }
