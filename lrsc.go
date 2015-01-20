@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"crypto/tls"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
@@ -18,19 +17,6 @@ type lrscConnection struct {
 	reporter.StatusReporter
 	inbound chan lrscMessage
 	err     chan error
-}
-
-type lrscMessage struct {
-	DeviceId string `json:"deveui"`
-	Payload  string `json:"pdu"`
-}
-
-func (self *lrscMessage) toJson() string {
-	json, err := json.Marshal(self)
-	if err != nil {
-		logger.Error("lrscMessage JSON marshaling failed: %v", err.Error())
-	}
-	return string(json)
 }
 
 type dialer interface {
@@ -191,13 +177,6 @@ func (self *lrscConnection) readLine() (string, error) {
 		logger.Debug("<<< " + message)
 		return message, nil
 	}
-}
-
-func parseLrscMessage(data string) (lrscMessage, error) {
-	var message lrscMessage
-	err := json.Unmarshal([]byte(data), &message)
-	//logger.Debug("Parsed Message: %v", message)
-	return message, err
 }
 
 func validateHandshake(handshake string) bool {
