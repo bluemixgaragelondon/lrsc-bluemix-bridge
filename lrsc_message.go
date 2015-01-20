@@ -4,17 +4,20 @@ import (
 	"encoding/json"
 )
 
-type lrscMessage struct {
-	DeviceId string `json:"deveui"`
-	Payload  string `json:"pdu"`
-}
+type lrscMessageMode int
 
-func (m *lrscMessage) toJson() string {
-	json, err := json.Marshal(m)
-	if err != nil {
-		logger.Error("lrscMessage JSON marshaling failed: %v", err.Error())
-	}
-	return string(json)
+const (
+	messageModeUnconfirmed lrscMessageMode = 0
+	messageModeConfirmed   lrscMessageMode = 2
+)
+
+type lrscMessage struct {
+	DeviceGuid       string          `json:"deveui"`
+	Payload          string          `json:"pdu"`
+	UniqueSequenceNo int             `json:"seqno"`
+	Mode             lrscMessageMode `json:"mode"`
+	Timeout          int             `json:"timeout"`
+	Port             int             `json:"port"`
 }
 
 func parseLrscMessage(data string) (lrscMessage, error) {

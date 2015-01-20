@@ -65,7 +65,7 @@ var _ = Describe("LRSC Bridge", func() {
 		go runConnectionLoop("LRSC Client", lrscClient)
 
 		messages := lrscClient.inbound
-		Expect(<-messages).To(Equal(lrscMessage{DeviceId: "id", Payload: "data"}))
+		Expect(<-messages).To(Equal(lrscMessage{DeviceGuid: "id", Payload: "data"}))
 	})
 	It("reports an error if connection fails", func() {
 		failingDialer := &failingDialer{}
