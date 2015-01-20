@@ -67,7 +67,7 @@ func startBridge() (map[string]reporter.StatusReporter, error) {
 	go func() {
 		for {
 			message := <-lrscClient.inbound
-			event := iotf.Event{Device: message.Deveui, Payload: message.Pdu}
+			event := iotf.Event{Device: message.DeviceId, Payload: message.Payload}
 			events <- event
 		}
 	}()

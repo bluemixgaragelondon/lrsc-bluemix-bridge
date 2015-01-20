@@ -21,7 +21,8 @@ type lrscConnection struct {
 }
 
 type lrscMessage struct {
-	Deveui, Pdu string
+	DeviceId string `json:"deveui"`
+	Payload  string `json:"pdu"`
 }
 
 func (self *lrscMessage) toJson() string {
