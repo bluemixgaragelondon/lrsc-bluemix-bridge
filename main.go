@@ -75,6 +75,16 @@ func startBridge() (map[string]reporter.StatusReporter, error) {
 	return reporters, nil
 }
 
+func convertIotfCommandToLrscDownstreamMessage(c iotf.Command) lrscMessage {
+	m := lrscMessage{
+		Type:       messageTypeDownstream,
+		DeviceGuid: c.Device,
+		Payload:    c.Payload,
+	}
+
+	return m
+}
+
 func setupLrscClient() error {
 	lrscClient.StatusReporter = reporter.New()
 	dialerConfig := dialerConfig{
