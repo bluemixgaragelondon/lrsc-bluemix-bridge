@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+var (
+	callOrder []string
+)
+
 var _ = Describe("IotfManager", func() {
 	Describe("extractCredentials", func() {
 		It("extracts valid credentials", func() {
@@ -49,6 +53,7 @@ var _ = Describe("IotfManager", func() {
 		mockDeviceRegistrar = newMockDeviceRegistrar()
 		iotfManager = &IoTFManager{broker: mockBroker, deviceRegistrar: mockDeviceRegistrar,
 			events: eventsChannel, errChan: errorsChannel}
+		callOrder = make([]string, 0)
 	})
 
 	AfterEach(func() {
@@ -113,6 +118,18 @@ var _ = Describe("IotfManager", func() {
 				_, devicePresent := mockDeviceRegistrar.devices["unseen"]
 				Expect(devicePresent).To(BeTrue())
 			})
+
+			It("registers the device before it publishes the message", func() {
+				go iotfManager.Loop()
+
+				event := Event{Device: "unseen", Payload: "message"}
+				select {
+				case eventsChannel <- event:
+				case <-time.After(time.Millisecond * 1):
+				}
+
+				Expect(callOrder).To(Equal([]string{"registerDevice", "publishMessageFromDevice"}))
+			})
 		})
 
 	})
@@ -146,6 +163,7 @@ func (self *mockBroker) statusReporter() reporter.StatusReporter {
 }
 
 func (self *mockBroker) publishMessageFromDevice(event Event) {
+	callOrder = append(callOrder, "publishMessageFromDevice")
 	self.events = append(self.events, event)
 }
 
@@ -159,6 +177,7 @@ func newMockDeviceRegistrar() *mockDeviceRegistrar {
 }
 
 func (self *mockDeviceRegistrar) registerDevice(deviceId string) error {
+	callOrder = append(callOrder, "registerDevice")
 	if self.connect {
 		return errors.New("")
 	}
