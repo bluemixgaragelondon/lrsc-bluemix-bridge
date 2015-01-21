@@ -166,7 +166,7 @@ func (self *lrscConnection) readLine() (string, error) {
 	for {
 		data, _, err := self.reader.ReadLine()
 		if err != nil {
-			return "", errors.New("failed to read message")
+			return "", errors.New("failed to read message: " + err.Error())
 		}
 
 		if len(data) == 0 {
