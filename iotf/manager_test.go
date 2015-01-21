@@ -14,25 +14,24 @@ var (
 )
 
 var _ = Describe("IotfManager", func() {
+	var (
+		vcapServices string
+	)
+
+	vcapServices = `{"iotf-service":[{"name":"iotf","label":"iotf-service","tags":["internet_of_things","ibm_created"],"plan":"iotf-service-free","credentials":{"iotCredentialsIdentifier":"a2g6k39sl6r5","mqtt_host":"br2ybi.messaging.internetofthings.ibmcloud.com","mqtt_u_port":1883,"mqtt_s_port":8883,"base_uri":"https://internetofthings.ibmcloud.com:443/api/v0001","org":"br2ybi","apiKey":"a-br2ybi-y0tc7vicym","apiToken":"AJIpvsdJ!a__nqR(TK"}}]}`
 	Describe("extractCredentials", func() {
 		It("extracts valid credentials", func() {
-			vcapServices := `{"iotf-service":[{"name":"iotf","label":"iotf-service","tags":["internet_of_things","ibm_created"],"plan":"iotf-service-free","credentials":{"iotCredentialsIdentifier":"a2g6k39sl6r5","mqtt_host":"br2ybi.messaging.internetofthings.ibmcloud.com","mqtt_u_port":1883,"mqtt_s_port":8883,"base_uri":"https://internetofthings.ibmcloud.com:443/api/v0001","org":"br2ybi","apiKey":"a-br2ybi-y0tc7vicym","apiToken":"AJIpvsdJ!a__nqR(TK"}}]}`
-
 			creds, _ := extractCredentials(vcapServices)
 			Expect(creds.User).To(Equal("a-br2ybi-y0tc7vicym"))
 		})
 
 		It("errors with empty VCAP_SERVICES", func() {
-			vcapServices := "{}"
-
-			_, err := extractCredentials(vcapServices)
+			_, err := extractCredentials("{}")
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("errors with empty string", func() {
-			vcapServices := ""
-
-			_, err := extractCredentials(vcapServices)
+			_, err := extractCredentials("")
 			Expect(err).To(HaveOccurred())
 		})
 
@@ -45,13 +44,18 @@ var _ = Describe("IotfManager", func() {
 		eventsChannel       chan Event
 		errorsChannel       chan error
 	)
+
 	BeforeEach(func() {
+		commandsChannel := make(chan Command)
 		eventsChannel = make(chan Event)
 		errorsChannel = make(chan error)
+
+		iotfManager, _ = NewIoTFManager(vcapServices, commandsChannel, eventsChannel)
+
 		mockBroker = newMockBroker()
 		mockDeviceRegistrar = newMockDeviceRegistrar()
-		iotfManager = &IoTFManager{broker: mockBroker, deviceRegistrar: mockDeviceRegistrar,
-			events: eventsChannel, errChan: errorsChannel}
+		iotfManager.broker = mockBroker
+		iotfManager.deviceRegistrar = mockDeviceRegistrar
 		callOrder = make([]string, 0)
 	})
 

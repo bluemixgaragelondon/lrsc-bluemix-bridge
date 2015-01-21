@@ -45,7 +45,7 @@ func NewIoTFManager(vcapServices string, commands chan<- Command, events <-chan 
 	errChan := make(chan error)
 	broker := newIoTFBroker(iotfCreds, commands, errChan)
 	deviceRegistrar := newIotfHttpRegistrar(iotfCreds)
-	return &IoTFManager{broker: broker, deviceRegistrar: deviceRegistrar, errChan: errChan}, nil
+	return &IoTFManager{broker: broker, deviceRegistrar: deviceRegistrar, events: events, errChan: errChan}, nil
 }
 
 func (self *IoTFManager) Connect() error {
@@ -54,6 +54,7 @@ func (self *IoTFManager) Connect() error {
 
 func (self *IoTFManager) Loop() {
 	for event := range self.events {
+		logger.Debug("loop broker: %p", self.broker)
 		self.deviceRegistrar.registerDevice(event.Device)
 		self.broker.publishMessageFromDevice(event)
 	}
