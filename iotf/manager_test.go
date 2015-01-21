@@ -18,8 +18,7 @@ var _ = Describe("IotfManager", func() {
 		It("extracts valid credentials", func() {
 			vcapServices := `{"iotf-service":[{"name":"iotf","label":"iotf-service","tags":["internet_of_things","ibm_created"],"plan":"iotf-service-free","credentials":{"iotCredentialsIdentifier":"a2g6k39sl6r5","mqtt_host":"br2ybi.messaging.internetofthings.ibmcloud.com","mqtt_u_port":1883,"mqtt_s_port":8883,"base_uri":"https://internetofthings.ibmcloud.com:443/api/v0001","org":"br2ybi","apiKey":"a-br2ybi-y0tc7vicym","apiToken":"AJIpvsdJ!a__nqR(TK"}}]}`
 
-			creds, err := extractCredentials(vcapServices)
-			Expect(err).NotTo(HaveOccurred())
+			creds, _ := extractCredentials(vcapServices)
 			Expect(creds.User).To(Equal("a-br2ybi-y0tc7vicym"))
 		})
 
