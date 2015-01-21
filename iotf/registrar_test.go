@@ -98,6 +98,21 @@ var _ = Describe("Registrar", func() {
 			})
 		})
 
+		Context("device has already been seen", func() {
+			It("does not make API call", func() {
+				server.AppendHandlers(
+					ghttp.CombineHandlers(
+						ghttp.VerifyRequest("POST", registrationPath),
+						ghttp.VerifyJSON(`{"id":"seen", "type": "LRSC"}`),
+						ghttp.RespondWith(http.StatusCreated, nil, nil),
+					),
+				)
+				registrar.registerDevice("seen")
+				registrar.registerDevice("seen")
+				Expect(server.ReceivedRequests()).To(HaveLen(1))
+			})
+		})
+
 	})
 
 	Describe("deviceRegistered", func() {
@@ -117,6 +132,7 @@ var _ = Describe("Registrar", func() {
 				Expect(registrar.deviceRegistered("123456789")).To(BeTrue())
 			})
 		})
+
 		Context("the device has not previously been registered", func() {
 			It("returns false", func() {
 				Expect(registrar.deviceRegistered("123456789")).To(BeFalse())

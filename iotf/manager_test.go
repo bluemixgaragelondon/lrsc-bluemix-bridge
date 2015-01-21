@@ -109,7 +109,7 @@ var _ = Describe("IotfManager", func() {
 		})
 
 		Describe("device registration", func() {
-			It("registers devices that have not yet been seen", func() {
+			It("registers devices when event is received", func() {
 				go iotfManager.Loop()
 
 				event := Event{Device: "unseen", Payload: "message"}

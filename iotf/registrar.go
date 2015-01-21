@@ -23,6 +23,10 @@ func newIotfHttpRegistrar(credentials *Credentials) *iotfHttpRegistrar {
 }
 
 func (self *iotfHttpRegistrar) registerDevice(deviceId string) error {
+	if self.deviceRegistered(deviceId) {
+		return nil
+	}
+
 	logger.Debug("Registering new device %v", deviceId)
 	url := fmt.Sprintf("%v/organizations/%v/devices", self.credentials.BaseUri, self.credentials.Org)
 	body := strings.NewReader(fmt.Sprintf(`{"id":"%v", "type": "%v"}`, deviceId, deviceType))
