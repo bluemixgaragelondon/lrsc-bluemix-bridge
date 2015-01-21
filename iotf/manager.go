@@ -54,7 +54,6 @@ func (self *IoTFManager) Connect() error {
 
 func (self *IoTFManager) Loop() {
 	for event := range self.events {
-		logger.Debug("loop broker: %p", self.broker)
 		self.deviceRegistrar.registerDevice(event.Device)
 		self.broker.publishMessageFromDevice(event)
 	}
