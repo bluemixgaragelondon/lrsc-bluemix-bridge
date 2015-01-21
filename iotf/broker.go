@@ -19,8 +19,7 @@ type broker interface {
 type iotfBroker struct {
 	client mqtt.Client
 	reporter.StatusReporter
-	registrar deviceRegistrar
-	commands  chan<- Command
+	commands chan<- Command
 }
 
 const (
@@ -49,9 +48,8 @@ func generateClientIdSuffix() string {
 func newIoTFBroker(credentials *Credentials, commands chan<- Command, errChan chan<- error) *iotfBroker {
 	clientOptions := newClientOptions(credentials, errChan)
 	client := mqtt.NewPahoClient(clientOptions)
-	registrar := iotfHttpRegistrar{credentials: credentials}
 	reporter := reporter.New()
-	return &iotfBroker{client: client, registrar: &registrar, commands: commands, StatusReporter: reporter}
+	return &iotfBroker{client: client, commands: commands, StatusReporter: reporter}
 }
 
 func (self *iotfBroker) connect() error {
