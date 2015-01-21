@@ -101,20 +101,18 @@ var _ = Describe("IotfManager", func() {
 		})
 
 		Describe("device registration", func() {
-			It("adds a device", func() {})
-			It("doesn't add a device that has already been seen", func() {})
-		})
+			It("registers devices that have not yet been seen", func() {
+				go iotfManager.Loop()
 
-		It("registers devices that have not yet been seen", func() {
-			go iotfManager.Loop()
+				event := Event{Device: "unseen", Payload: "message"}
+				select {
+				case eventsChannel <- event:
+				case <-time.After(time.Millisecond * 1):
+				}
 
-			event := Event{Device: "unseen", Payload: "message"}
-			select {
-			case eventsChannel <- event:
-			case <-time.After(time.Millisecond * 1):
-			}
-
-			Expect(len(mockDeviceRegistrar.devices)).To(Equal(1))
+				_, devicePresent := mockDeviceRegistrar.devices["unseen"]
+				Expect(devicePresent).To(BeTrue())
+			})
 		})
 
 	})
