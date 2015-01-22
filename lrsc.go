@@ -124,7 +124,9 @@ func (self *lrscConnection) establish() error {
 }
 
 func (self *lrscConnection) handshake() error {
-	err := self.send("JSON_000")
+	data := []byte("JSON_000")
+
+	_, err := self.conn.Write(data)
 	if err != nil {
 		logger.Debug("handshake failed: " + err.Error())
 		return err
