@@ -5,6 +5,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/bridge"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
 	"time"
 )
@@ -46,7 +47,7 @@ var _ = Describe("IotfManager", func() {
 	)
 
 	BeforeEach(func() {
-		commandsChannel := make(chan Command)
+		commandsChannel := make(chan bridge.Command)
 		eventsChannel = make(chan Event)
 		errorsChannel = make(chan error)
 
