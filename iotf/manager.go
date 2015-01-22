@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/cromega/clogger"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/bridge"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/utils"
 )
@@ -36,7 +37,7 @@ type Credentials struct {
 	MqttUnsecurePort int    `json:"mqtt_u_port"`
 }
 
-func NewIoTFManager(vcapServices string, commands chan<- Command, events <-chan Event) (*IoTFManager, error) {
+func NewIoTFManager(vcapServices string, commands chan<- bridge.Command, events <-chan Event) (*IoTFManager, error) {
 	iotfCreds, err := extractCredentials(vcapServices)
 	if err != nil {
 		return nil, err

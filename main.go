@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cromega/clogger"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/bridge"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/iotf"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/utils"
@@ -38,7 +39,7 @@ func main() {
 func startBridge() (map[string]reporter.StatusReporter, error) {
 	appReporter := reporter.New()
 
-	commands := make(chan iotf.Command)
+	commands := make(chan bridge.Command)
 	events := make(chan iotf.Event)
 
 	iotfManager, err := iotf.NewIoTFManager(os.Getenv("VCAP_SERVICES"), commands, events)
@@ -78,7 +79,7 @@ func startBridge() (map[string]reporter.StatusReporter, error) {
 	return reporters, nil
 }
 
-func convertIotfCommandToLrscDownstreamMessage(c iotf.Command) lrscMessage {
+func convertIotfCommandToLrscDownstreamMessage(c bridge.Command) lrscMessage {
 	m := lrscMessage{
 		Type:       messageTypeDownstream,
 		DeviceGuid: c.Device,

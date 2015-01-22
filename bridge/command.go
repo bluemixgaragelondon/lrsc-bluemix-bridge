@@ -1,4 +1,4 @@
-package iotf
+package bridge
 
 type Command struct {
 	Device  string

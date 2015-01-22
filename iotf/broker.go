@@ -3,6 +3,7 @@ package iotf
 import (
 	"errors"
 	"fmt"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/bridge"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/mqtt"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
 	"math/rand"
@@ -19,7 +20,7 @@ type broker interface {
 type iotfBroker struct {
 	client mqtt.Client
 	reporter.StatusReporter
-	commands chan<- Command
+	commands chan<- bridge.Command
 }
 
 const (
@@ -45,7 +46,7 @@ func generateClientIdSuffix() string {
 	return string(suffix)
 }
 
-func newIoTFBroker(credentials *Credentials, commands chan<- Command, errChan chan<- error) *iotfBroker {
+func newIoTFBroker(credentials *Credentials, commands chan<- bridge.Command, errChan chan<- error) *iotfBroker {
 	clientOptions := newClientOptions(credentials, errChan)
 	client := mqtt.NewPahoClient(clientOptions)
 	reporter := reporter.New()
@@ -82,11 +83,11 @@ func (self *iotfBroker) publishMessageFromDevice(event Event) {
 	self.client.PublishMessage(topic, []byte(event.Payload))
 }
 
-func (self *iotfBroker) subscribeToCommandMessages(commands chan<- Command) error {
+func (self *iotfBroker) subscribeToCommandMessages(commands chan<- bridge.Command) error {
 	topic := fmt.Sprintf("iot-2/type/%s/id/+/cmd/+/fmt/json", deviceType)
 	return self.client.StartSubscription(topic, func(message mqtt.Message) {
 		device := extractDeviceFromCommandTopic(message.Topic())
-		command := Command{Device: device, Payload: string(message.Payload())}
+		command := bridge.Command{Device: device, Payload: string(message.Payload())}
 		logger.Debug("received command message for %v", command.Device)
 		commands <- command
 	})

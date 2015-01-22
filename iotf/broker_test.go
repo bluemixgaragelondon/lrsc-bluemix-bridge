@@ -4,6 +4,7 @@ import (
 	"errors"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/bridge"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/mqtt"
 )
 
@@ -11,14 +12,14 @@ var _ = Describe("IoTF Broker", func() {
 	var (
 		client         *mockClient
 		connection     *iotfBroker
-		commandChannel chan Command
+		commandChannel chan bridge.Command
 	)
 
 	BeforeEach(func() {
 		client = NewMockClient()
 		reporter := &mockStatusReporter{}
 
-		commandChannel = make(chan Command)
+		commandChannel = make(chan bridge.Command)
 
 		connection = &iotfBroker{client: client, commands: commandChannel, StatusReporter: reporter}
 	})
