@@ -8,7 +8,7 @@ import (
 )
 
 func setupHttp(reporters map[string]reporter.StatusReporter) {
-	http.Handle("/", http.FileServer(http.Dir("web")))
+	http.Handle("/", http.FileServer(http.Dir("public")))
 	http.HandleFunc("/env", env)
 
 	http.HandleFunc("/iotfStatus", func(res http.ResponseWriter, req *http.Request) {
