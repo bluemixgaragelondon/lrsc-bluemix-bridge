@@ -31,7 +31,7 @@ var _ = Describe("LRSC Bridge", func() {
 				}
 			},
 			writeFunc: func(message string) error {
-				if message == "JSON_000\n\n" {
+				if message == "JSON_000" {
 					connectionAttempts += 1
 				}
 				return nil
