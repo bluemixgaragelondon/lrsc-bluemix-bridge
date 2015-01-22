@@ -2,9 +2,15 @@
 
 main () {
 	. scripts/run_with_env
-	scripts/build -o lrsc-bridge
+	scripts/build 
 	
-	./lrsc-bridge "$@"
+	run_bridge
+}
+
+run_bridge() {
+	GO_APP_BINARY=${APP_BINARY:?must be defined}
+
+	./${APP_BINARY} "$@"
 }
 
 main

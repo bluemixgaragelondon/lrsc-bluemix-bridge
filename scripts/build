@@ -20,7 +20,8 @@ use_vendored_packages() {
 }
 
 build() {
-	go build $ARGS
+	GO_APP_BINARY=${APP_BINARY:?must be defined}
+	go build -o "$APP_BINARY" $ARGS
 }
 
 main
