@@ -29,9 +29,9 @@ install_test_dependencies() {
 }
 
 within_app() {
-	pushd "${GOPATH}/src/${APP_PKG_NAME}"
+	pushd "${GOPATH}/src/${APP_PKG_NAME}" 1>&-
 		"$@"
-	popd
+	popd 1>&-
 }
 
 use_vendored_packages() {
