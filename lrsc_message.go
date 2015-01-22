@@ -23,14 +23,16 @@ type lrscMessage struct {
 	Type             lrscMessageType `json:"msgtag"`
 	DeviceGuid       string          `json:"deveui"`
 	Payload          string          `json:"pdu"`
-	UniqueSequenceNo int             `json:"seqno"`
+	UniqueSequenceNo uint64          `json:"seqno"`
 	Mode             lrscMessageMode `json:"mode"`
-	Timeout          int             `json:"timeout"`
-	Port             int             `json:"port"`
+	Timeout          uint            `json:"timeout"`
+	Port             uint            `json:"port"`
 }
 
-func parseLrscMessage(data string) (lrscMessage, error) {
+func parseLrscMessage(s string) (lrscMessage, error) {
 	var message lrscMessage
-	err := json.Unmarshal([]byte(data), &message)
+
+	err := json.Unmarshal([]byte(s), &message)
+
 	return message, err
 }

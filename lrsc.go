@@ -3,11 +3,18 @@ package main
 import (
 	"bufio"
 	"crypto/tls"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/bridge"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
 	"io"
 	"io/ioutil"
+	"sync/atomic"
+)
+
+const (
+	lrscDevicePort uint = 10
 )
 
 type lrscConnection struct {
@@ -15,8 +22,9 @@ type lrscConnection struct {
 	reader *bufio.Reader
 	dialer dialer
 	reporter.StatusReporter
-	inbound chan lrscMessage
-	err     chan error
+	inbound        chan lrscMessage
+	err            chan error
+	sequenceNumber uint64
 }
 
 type dialer interface {
@@ -162,6 +170,37 @@ func (self *lrscConnection) send(message string) error {
 		logger.Debug(">>> " + message)
 	}
 	return err
+}
+
+func (c *lrscConnection) incrementSequenceNumber() {
+	atomic.AddUint64(&c.sequenceNumber, 1)
+}
+
+func (c *lrscConnection) sendCommand(v bridge.Command) error {
+	message := convertCommandToLrscDownstreamMessage(v)
+	message.Port = lrscDevicePort
+
+	c.incrementSequenceNumber()
+	message.UniqueSequenceNo = c.sequenceNumber
+
+	messageJSON, err := json.Marshal(message)
+	if err != nil {
+		return err
+	}
+
+	err = c.send(string(messageJSON))
+
+	return err
+}
+
+func convertCommandToLrscDownstreamMessage(v bridge.Command) lrscMessage {
+	message := lrscMessage{
+		Type:       messageTypeDownstream,
+		DeviceGuid: v.Device,
+		Payload:    v.Payload,
+	}
+
+	return message
 }
 
 func (self *lrscConnection) readLine() (string, error) {

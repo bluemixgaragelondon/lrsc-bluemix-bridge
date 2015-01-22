@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/cromega/clogger"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/bridge"
@@ -61,10 +60,9 @@ func startBridge() (map[string]reporter.StatusReporter, error) {
 	go runConnectionLoop("IoTF client", iotfManager)
 
 	go func() {
-		for commandMessage := range commands {
-			msgJson, _ := json.Marshal(convertIotfCommandToLrscDownstreamMessage(commandMessage))
-			lrscClient.send(string(msgJson))
-			logger.Debug("Received command message: %v", commandMessage)
+		for command := range commands {
+			lrscClient.sendCommand(command)
+			logger.Debug("Received command message: %v", command)
 		}
 	}()
 
@@ -77,16 +75,6 @@ func startBridge() (map[string]reporter.StatusReporter, error) {
 	}()
 
 	return reporters, nil
-}
-
-func convertIotfCommandToLrscDownstreamMessage(c bridge.Command) lrscMessage {
-	m := lrscMessage{
-		Type:       messageTypeDownstream,
-		DeviceGuid: c.Device,
-		Payload:    c.Payload,
-	}
-
-	return m
 }
 
 func setupLrscClient() error {

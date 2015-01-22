@@ -4,6 +4,7 @@ import (
 	"errors"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/bridge"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
 	"io"
 )
@@ -74,6 +75,74 @@ var _ = Describe("LRSC Bridge", func() {
 		lrscClient.establish()
 
 		Expect(lrscClient.Summary()).To(Equal(`{"CONNECTION":"FAILED"}`))
+	})
+
+	It("writes command message", func() {
+		written := ""
+		mockConn := &mockConnection{
+			readFunc: func() (string, error) {
+				return "", nil
+			},
+			writeFunc: func(s string) error {
+				written = s
+				return nil
+			},
+		}
+		lrscClient := lrscConnection{conn: mockConn}
+		lrscClient.sendCommand(bridge.Command{Device: "device", Payload: "payload"})
+
+		message, err := parseLrscMessage(written)
+		if err != nil {
+			panic(err)
+		}
+
+		Expect(message.DeviceGuid).To(Equal("device"))
+		Expect(message.Payload).To(Equal("payload"))
+		Expect(message.Type).To(Equal(messageTypeDownstream))
+		Expect(message.UniqueSequenceNo).To(BeEquivalentTo(1))
+		Expect(message.Port).To(BeEquivalentTo(10))
+		Expect(message.Mode).To(Equal(messageModeUnconfirmed))
+	})
+
+	It("increases sequence number", func() {
+		written := ""
+		mockConn := &mockConnection{
+			readFunc: func() (string, error) {
+				return "", nil
+			},
+			writeFunc: func(s string) error {
+				written = s
+				return nil
+			},
+		}
+		lrscClient := lrscConnection{conn: mockConn}
+
+		for i := 1; i <= 5; i++ {
+			lrscClient.sendCommand(bridge.Command{})
+
+			message, err := parseLrscMessage(written)
+			if err != nil {
+				panic(err)
+			}
+
+			Expect(message.UniqueSequenceNo).To(BeEquivalentTo(i))
+		}
+	})
+
+	Describe("converting commands to LRSC downstream messages", func() {
+		lrscMessage := convertCommandToLrscDownstreamMessage(bridge.Command{Device: "AA-AA", Payload: "payload"})
+
+		It("message type is downstream", func() {
+			Expect(lrscMessage.Type).To(Equal(messageTypeDownstream))
+		})
+
+		It("uses device id from IoTF command", func() {
+			Expect(lrscMessage.DeviceGuid).To(Equal("AA-AA"))
+		})
+
+		It("uses payload from IoTF command", func() {
+			Expect(lrscMessage.Payload).To(Equal("payload"))
+		})
 	})
 })
 
