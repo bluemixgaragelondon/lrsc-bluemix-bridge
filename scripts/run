@@ -2,8 +2,9 @@
 
 main () {
 	. scripts/run_with_env
-	. scripts/build -o lrsc-bridge
-	within_app ./lrsc-bridge "$@"
+	scripts/build -o lrsc-bridge
+	
+	./lrsc-bridge "$@"
 }
 
 main
