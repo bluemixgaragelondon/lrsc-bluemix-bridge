@@ -1,9 +1,9 @@
-#!/bin/bash -xe
+#!/bin/bash -e
 
 main () {
 	. scripts/run_with_env
-	go build
-	./lrsc-bridge
+	. scripts/build -o lrsc-bridge
+	within_app ./lrsc-bridge "$@"
 }
 
 main
