@@ -38,6 +38,7 @@ func (self *iotfHttpRegistrar) registerDevice(deviceId string) error {
 
 	client := &http.Client{}
 	response, _ := client.Do(request)
+	defer response.Body.Close()
 
 	switch response.StatusCode {
 	case http.StatusCreated:
