@@ -10,3 +10,5 @@ env:
   LRSC_ENV: prod
 name: lrsc-bridge
 host: lrsc-bridge
+services:
+  - iotf
