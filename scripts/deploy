@@ -14,7 +14,10 @@ login_to_bluemix() {
   CF_ORG="${CF_ORG:?must be defined}"
   CF_SPACE="${CF_SPACE:?must be defined}"
 
-  cf apps || cf login -a "$CF_URL" -u "$CF_USERNAME" -p "$CF_PASSWORD" -o "$CF_ORG" -s "$CF_SPACE"
+  if ! cf apps | grep -e "org ${CF_ORG}.*space ${CF_SPACE}.*as ${CF_USERNAME}" >/dev/null
+  then
+    cf login -a "$CF_URL" -u "$CF_USERNAME" -p "$CF_PASSWORD" -o "$CF_ORG" -s "$CF_SPACE"
+  fi
 }
 
 build_for_bluemix() {
