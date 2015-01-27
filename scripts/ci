@@ -1,0 +1,25 @@
+#!/bin/bash
+
+main() {
+  . scripts/run_with_env
+  copy_lrsc_cert_and_key_from_credential_store
+  "${BASE_PATH}/scripts/test"
+  "${BASE_PATH}/scripts/build"
+  "${BASE_PATH}/scripts/deploy"
+}
+
+copy_lrsc_cert_and_key_from_credential_store() {
+  BASE_PATH="${BASE_PATH:?must be defined}"
+  CLIENT_CERT="${CLIENT_CERT:?must be defined}"
+  CLIENT_KEY="${CLIENT_KEY:?must be defined}"
+  LRSC_CLIENT_CERT="${LRSC_CLIENT_CERT:?must be defined}"
+  LRSC_CLIENT_KEY="${LRSC_CLIENT_KEY:?must be defined}"
+
+  pushd "$BASE_PATH" >&-
+    cp "$CLIENT_CERT" "$LRSC_CLIENT_CERT_FILE"
+    cp "$CLIENT_KEY" "$LRSC_CLIENT_KEY_FILE"
+  popd >&-
+}
+
+
+main

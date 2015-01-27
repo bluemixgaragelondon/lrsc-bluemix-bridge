@@ -2,29 +2,8 @@
 
 main() {
   . scripts/run_with_env
-  setup_client_cert_and_key
   login_to_bluemix
   deploy_to_bluemix
-}
-
-setup_client_cert_and_key() {
-  BASE_PATH="${BASE_PATH:?must be defined}"
-  CLIENT_CERT="${CLIENT_CERT:?must be defined}"
-  LRSC_CLIENT_CERT="${LRSC_CLIENT_CERT:?must be defined}"
-  CLIENT_KEY="${CLIENT_KEY:?must be defined}"
-  LRSC_CLIENT_KEY="${LRSC_CLIENT_KEY:?must be defined}"
-
-  pushd "$BASE_PATH" >&-
-    if [ ! -e "$LRSC_CLIENT_CERT" ]
-    then
-      cp "$CLIENT_CERT" "$LRSC_CLIENT_CERT"
-    fi
-
-    if [ ! -e "$LRSC_CLIENT_KEY" ]
-    then
-      cp "$CLIENT_KEY" "$LRSC_CLIENT_KEY"
-    fi
-  popd >&-
 }
 
 login_to_bluemix() {
