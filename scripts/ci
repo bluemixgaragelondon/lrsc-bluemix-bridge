@@ -15,10 +15,10 @@ copy_lrsc_cert_and_key_from_credential_store() {
   LRSC_CLIENT_CERT="${LRSC_CLIENT_CERT:?must be defined}"
   LRSC_CLIENT_KEY="${LRSC_CLIENT_KEY:?must be defined}"
 
-  pushd "$BASE_PATH"
+  pushd "$BASE_PATH" >/dev/null
     cp "$CREDENTIALS_STORE_CLIENT_CERT" "$LRSC_CLIENT_CERT"
     cp "$CREDENTIALS_STORE_CLIENT_KEY" "$LRSC_CLIENT_KEY"
-  popd
+  popd >/dev/null
 }
 
 main

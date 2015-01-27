@@ -10,9 +10,9 @@ main() {
 }
 
 within_app() {
-  pushd "${GOPATH}/src/${APP_PKG_NAME}"
+  pushd "${GOPATH}/src/${APP_PKG_NAME}" >/dev/null
     "$@"
-  popd
+  popd >/dev/null
 }
 
 use_vendored_packages() {
