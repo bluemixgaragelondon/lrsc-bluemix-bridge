@@ -21,7 +21,7 @@ use_vendored_packages() {
 
 build() {
   APP_BINARY="${APP_BINARY:?must be defined}"
-  ARGS="${ARGS:?must be defined}"
+  ARGS="${ARGS?must be defined}"
 
   go build -o "$APP_BINARY" $ARGS
 }
