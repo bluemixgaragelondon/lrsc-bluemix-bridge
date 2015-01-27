@@ -1,27 +1,27 @@
-#!/bin/bash -e
+#!/bin/bash
 
 APP_PKG_NAME="hub.jazz.net/git/bluemixgarage/lrsc-bridge"
 ARGS="$@"
 
 main() {
-	. scripts/run_with_env
-	within_app use_vendored_packages
-	within_app build
+  . scripts/run_with_env
+  within_app use_vendored_packages
+  within_app build
 }
 
 within_app() {
-	pushd "${GOPATH}/src/${APP_PKG_NAME}" 1>&-
-		"$@"
-	popd 1>&-
+  pushd "${GOPATH}/src/${APP_PKG_NAME}" >&-
+    "$@"
+  popd >&-
 }
 
 use_vendored_packages() {
-	godep restore
+  godep restore
 }
 
 build() {
-	GO_APP_BINARY=${APP_BINARY:?must be defined}
-	go build -o "$APP_BINARY" $ARGS
+  GO_APP_BINARY=${APP_BINARY:?must be defined}
+  go build -o "$APP_BINARY" $ARGS
 }
 
 main
