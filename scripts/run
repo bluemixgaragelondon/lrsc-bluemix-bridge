@@ -1,16 +1,16 @@
 #!/bin/bash -e
 
 main () {
-	. scripts/run_with_env
-	scripts/build 
-	
-	run_bridge
+  . scripts/run_with_env
+  scripts/build 
+
+  run_bridge
 }
 
 run_bridge() {
-	GO_APP_BINARY=${APP_BINARY:?must be defined}
+  GO_APP_BINARY=${APP_BINARY:?must be defined}
 
-	./${APP_BINARY} "$@"
+  ./${APP_BINARY} "$@"
 }
 
 main
