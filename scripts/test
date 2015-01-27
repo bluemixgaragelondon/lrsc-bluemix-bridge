@@ -4,29 +4,29 @@ APP_PKG_NAME="hub.jazz.net/git/bluemixgarage/lrsc-bridge"
 ARGS="$@"
 
 main() {
-	. scripts/run_with_env
-	install_test_dependencies
-	within_app use_vendored_packages
-	within_app run_tests
+  . scripts/run_with_env
+  install_test_dependencies
+  within_app use_vendored_packages
+  within_app run_tests
 }
 
 install_test_dependencies() {
-	which godep 2>&1 > /dev/null || go get github.com/tools/godep
-	which ginkgo 2>&1 > /dev/null || go get github.com/onsi/ginkgo/ginkgo
+  which godep 2>&1 > /dev/null || go get github.com/tools/godep
+  which ginkgo 2>&1 > /dev/null || go get github.com/onsi/ginkgo/ginkgo
 }
 
 within_app() {
-	pushd "${GOPATH}/src/${APP_PKG_NAME}" 1>/dev/null
-		"$@"
-	popd 1>/dev/null
+  pushd "${GOPATH}/src/${APP_PKG_NAME}"
+  "$@"
+  popd
 }
 
 use_vendored_packages() {
-	godep restore
+  godep restore
 }
 
 run_tests() {
-	ginkgo $ARGS -r -randomizeAllSpecs
+  ginkgo $ARGS -r -randomizeAllSpecs
 }
 
 main
