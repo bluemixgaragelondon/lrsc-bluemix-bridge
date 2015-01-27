@@ -1,7 +1,4 @@
-.cf/
-.env
-.secrets
-README.md
-scripts/
-script
-
+*
+!lrsc-bridge
+!client.cert
+!client.key
