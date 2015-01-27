@@ -2,6 +2,7 @@
 
 main() {
   . scripts/run_with_env
+  build_for_bluemix
   login_to_bluemix
   deploy_to_bluemix
 }
@@ -14,6 +15,14 @@ login_to_bluemix() {
   CF_SPACE="${CF_SPACE:?must be defined}"
 
   cf apps || cf login -a "$CF_URL" -u "$CF_USERNAME" -p "$CF_PASSWORD" -o "$CF_ORG" -s "$CF_SPACE"
+}
+
+build_for_bluemix() {
+  BASE_PATH="${BASE_PATH:?must be defined}"
+  export GOOS="${CF_GOOS:?must be defined}"
+  export GOARCH="${CF_GOARCH:?must be defined}"
+
+  "${BASE_PATH}/scripts/build"
 }
 
 deploy_to_bluemix() {

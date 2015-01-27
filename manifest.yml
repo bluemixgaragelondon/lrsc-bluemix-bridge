@@ -1,6 +1,6 @@
 memory: 128M
-buildpack: https://github.com/cloudfoundry/go-buildpack
-command: lrsc-bridge
+buildpack: https://github.com/ph3nx/heroku-binary-buildpack
+command: ./lrsc-bridge
 env:
   LRSC_HOST: dev.lrsc.ch
   LRSC_PORT: 55055
