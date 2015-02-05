@@ -20,12 +20,9 @@ type broker interface {
 type iotfBroker struct {
 	client mqtt.Client
 	reporter.StatusReporter
-	commands chan<- bridge.Command
+	commands   chan<- bridge.Command
+	deviceType string
 }
-
-const (
-	deviceType = "LRSC"
-)
 
 func newClientOptions(credentials *Credentials, errChan chan<- error) mqtt.ClientOptions {
 	return mqtt.ClientOptions{
@@ -46,11 +43,11 @@ func generateClientIdSuffix() string {
 	return string(suffix)
 }
 
-func newIoTFBroker(credentials *Credentials, commands chan<- bridge.Command, errChan chan<- error) *iotfBroker {
+func newIoTFBroker(credentials *Credentials, commands chan<- bridge.Command, errChan chan<- error, deviceType string) *iotfBroker {
 	clientOptions := newClientOptions(credentials, errChan)
 	client := mqtt.NewPahoClient(clientOptions)
 	reporter := reporter.New()
-	return &iotfBroker{client: client, commands: commands, StatusReporter: reporter}
+	return &iotfBroker{client: client, commands: commands, StatusReporter: reporter, deviceType: deviceType}
 }
 
 func (self *iotfBroker) connect() error {
@@ -78,13 +75,13 @@ func (self *iotfBroker) statusReporter() reporter.StatusReporter {
 }
 
 func (self *iotfBroker) publishMessageFromDevice(event Event) {
-	topic := fmt.Sprintf("iot-2/type/%v/id/%v/evt/TEST/fmt/json", deviceType, event.Device)
+	topic := fmt.Sprintf("iot-2/type/%v/id/%v/evt/TEST/fmt/json", self.deviceType, event.Device)
 	logger.Debug("publishing event on topic %v: %v", topic, event)
 	self.client.PublishMessage(topic, []byte(event.Payload))
 }
 
 func (self *iotfBroker) subscribeToCommandMessages(commands chan<- bridge.Command) error {
-	topic := fmt.Sprintf("iot-2/type/%s/id/+/cmd/+/fmt/json", deviceType)
+	topic := fmt.Sprintf("iot-2/type/%s/id/+/cmd/+/fmt/json", self.deviceType)
 	return self.client.StartSubscription(topic, func(message mqtt.Message) {
 		device := extractDeviceFromCommandTopic(message.Topic())
 		command := bridge.Command{Device: device, Payload: string(message.Payload())}

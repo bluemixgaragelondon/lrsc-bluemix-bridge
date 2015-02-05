@@ -37,15 +37,15 @@ type Credentials struct {
 	MqttUnsecurePort int    `json:"mqtt_u_port"`
 }
 
-func NewIoTFManager(vcapServices string, commands chan<- bridge.Command, events <-chan Event) (*IoTFManager, error) {
+func NewIoTFManager(vcapServices string, commands chan<- bridge.Command, events <-chan Event, deviceType string) (*IoTFManager, error) {
 	iotfCreds, err := extractCredentials(vcapServices)
 	if err != nil {
 		return nil, err
 	}
 
 	errChan := make(chan error)
-	broker := newIoTFBroker(iotfCreds, commands, errChan)
-	deviceRegistrar := newIotfHttpRegistrar(iotfCreds)
+	broker := newIoTFBroker(iotfCreds, commands, errChan, deviceType)
+	deviceRegistrar := newIotfHttpRegistrar(iotfCreds, deviceType)
 	return &IoTFManager{broker: broker, deviceRegistrar: deviceRegistrar, events: events, errChan: errChan}, nil
 }
 

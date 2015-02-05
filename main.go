@@ -41,7 +41,8 @@ func startBridge() (map[string]reporter.StatusReporter, error) {
 	commands := make(chan bridge.Command)
 	events := make(chan iotf.Event)
 
-	iotfManager, err := iotf.NewIoTFManager(os.Getenv("VCAP_SERVICES"), commands, events)
+	deviceType := "LRSC"
+	iotfManager, err := iotf.NewIoTFManager(os.Getenv("VCAP_SERVICES"), commands, events, deviceType)
 	if err != nil {
 		appReporter.Report("IoTF Manager:", err.Error())
 		return nil, err

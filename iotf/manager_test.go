@@ -51,7 +51,7 @@ var _ = Describe("IotfManager", func() {
 		eventsChannel = make(chan Event)
 		errorsChannel = make(chan error)
 
-		iotfManager, _ = NewIoTFManager(vcapServices, commandsChannel, eventsChannel)
+		iotfManager, _ = NewIoTFManager(vcapServices, commandsChannel, eventsChannel, "test")
 
 		mockBroker = newMockBroker()
 		mockDeviceRegistrar = newMockDeviceRegistrar()

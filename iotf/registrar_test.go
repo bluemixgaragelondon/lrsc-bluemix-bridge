@@ -23,7 +23,7 @@ var _ = Describe("Registrar", func() {
 			BaseUri:  server.URL()}
 
 		registrationPath = "/organizations/testorg/devices"
-		registrar = newIotfHttpRegistrar(&credentials)
+		registrar = newIotfHttpRegistrar(&credentials, "test")
 
 	})
 
@@ -48,7 +48,7 @@ var _ = Describe("Registrar", func() {
 			server.AppendHandlers(
 				ghttp.CombineHandlers(
 					ghttp.VerifyRequest("POST", registrationPath),
-					ghttp.VerifyJSON(`{"id":"123456789", "type": "LRSC"}`),
+					ghttp.VerifyJSON(`{"id":"123456789", "type": "test"}`),
 					ghttp.RespondWith(http.StatusCreated, nil, nil),
 				),
 			)
@@ -62,7 +62,7 @@ var _ = Describe("Registrar", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", registrationPath),
-						ghttp.VerifyJSON(`{"id":"123456789", "type": "LRSC"}`),
+						ghttp.VerifyJSON(`{"id":"123456789", "type": "test"}`),
 						ghttp.RespondWith(http.StatusCreated, nil, nil),
 					),
 				)
@@ -76,7 +76,7 @@ var _ = Describe("Registrar", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", registrationPath),
-						ghttp.VerifyJSON(`{"id":"123456789", "type": "LRSC"}`),
+						ghttp.VerifyJSON(`{"id":"123456789", "type": "test"}`),
 						ghttp.RespondWith(http.StatusConflict, nil, nil),
 					),
 				)
@@ -103,7 +103,7 @@ var _ = Describe("Registrar", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", registrationPath),
-						ghttp.VerifyJSON(`{"id":"seen", "type": "LRSC"}`),
+						ghttp.VerifyJSON(`{"id":"seen", "type": "test"}`),
 						ghttp.RespondWith(http.StatusCreated, nil, nil),
 					),
 				)
@@ -121,7 +121,7 @@ var _ = Describe("Registrar", func() {
 				server.AppendHandlers(
 					ghttp.CombineHandlers(
 						ghttp.VerifyRequest("POST", registrationPath),
-						ghttp.VerifyJSON(`{"id":"123456789", "type": "LRSC"}`),
+						ghttp.VerifyJSON(`{"id":"123456789", "type": "test"}`),
 						ghttp.RespondWith(http.StatusCreated, nil, nil),
 					),
 				)

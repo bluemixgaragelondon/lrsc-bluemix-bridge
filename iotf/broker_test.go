@@ -21,7 +21,7 @@ var _ = Describe("IoTF Broker", func() {
 
 		commandChannel = make(chan bridge.Command)
 
-		connection = &iotfBroker{client: client, commands: commandChannel, StatusReporter: reporter}
+		connection = &iotfBroker{client: client, commands: commandChannel, StatusReporter: reporter, deviceType: "test"}
 	})
 
 	AfterEach(func() {
@@ -66,7 +66,7 @@ var _ = Describe("IoTF Broker", func() {
 	Describe("publishMessageFromDevice", func() {
 		It("sends a message with the correct topic", func() {
 			connection.publishMessageFromDevice(Event{Device: "foo", Payload: "message"})
-			Expect(client.messages[0].Topic()).To(Equal("iot-2/type/LRSC/id/foo/evt/TEST/fmt/json"))
+			Expect(client.messages[0].Topic()).To(Equal("iot-2/type/test/id/foo/evt/TEST/fmt/json"))
 		})
 
 		It("sends a message with the payload", func() {

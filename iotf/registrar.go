@@ -15,11 +15,12 @@ type deviceRegistrar interface {
 type iotfHttpRegistrar struct {
 	credentials       *Credentials
 	devicesRegistered map[string]struct{}
+	deviceType        string
 }
 
-func newIotfHttpRegistrar(credentials *Credentials) *iotfHttpRegistrar {
+func newIotfHttpRegistrar(credentials *Credentials, deviceType string) *iotfHttpRegistrar {
 	devicesRegistered := make(map[string]struct{})
-	return &iotfHttpRegistrar{credentials: credentials, devicesRegistered: devicesRegistered}
+	return &iotfHttpRegistrar{credentials: credentials, devicesRegistered: devicesRegistered, deviceType: deviceType}
 }
 
 func (self *iotfHttpRegistrar) registerDevice(deviceId string) error {
@@ -29,7 +30,7 @@ func (self *iotfHttpRegistrar) registerDevice(deviceId string) error {
 
 	logger.Debug("Registering new device %v", deviceId)
 	url := fmt.Sprintf("%v/organizations/%v/devices", self.credentials.BaseUri, self.credentials.Org)
-	body := strings.NewReader(fmt.Sprintf(`{"id":"%v", "type": "%v"}`, deviceId, deviceType))
+	body := strings.NewReader(fmt.Sprintf(`{"id":"%v", "type": "%v"}`, deviceId, self.deviceType))
 	request, _ := http.NewRequest("POST", url, body)
 
 	request.SetBasicAuth(self.credentials.User, self.credentials.Password)
