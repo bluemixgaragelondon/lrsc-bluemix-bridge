@@ -6,7 +6,6 @@ env:
   LRSC_PORT: 55055
   LRSC_CLIENT_CERT: client.cert
   LRSC_CLIENT_KEY: client.key
-  REMOTE_LOG_URL: udp://logs2.papertrailapp.com:45777
   LRSC_ENV: prod
 name: lrsc-bridge
 host: lrsc-bridge
