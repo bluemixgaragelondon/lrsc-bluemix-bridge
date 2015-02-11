@@ -1,8 +1,8 @@
 #!/bin/bash -e
 
 main () {
-  . scripts/run_with_env
-  scripts/build 
+  . script/run_with_env
+  script/build 
 
   run_bridge
 }

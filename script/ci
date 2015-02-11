@@ -1,11 +1,11 @@
 #!/bin/bash
 
 main() {
-  . scripts/run_with_env
+  . script/run_with_env
   copy_lrsc_cert_and_key_from_credential_store
-  "${BASE_PATH}/scripts/test"
-  "${BASE_PATH}/scripts/build"
-  "${BASE_PATH}/scripts/deploy"
+  "${BASE_PATH}/script/test"
+  "${BASE_PATH}/script/build"
+  "${BASE_PATH}/script/deploy"
 }
 
 copy_lrsc_cert_and_key_from_credential_store() {
