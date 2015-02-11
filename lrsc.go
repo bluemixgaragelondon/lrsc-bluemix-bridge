@@ -116,7 +116,7 @@ func (self *lrscConnection) establish() error {
 		self.Report("CONNECTION", err.Error())
 		return err
 	}
-	logger.Info("Connected successfully")
+	logger.Info("Connected to LRSC successfully")
 
 	self.conn = conn
 	self.reader = bufio.NewReader(self.conn)
