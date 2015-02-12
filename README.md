@@ -22,15 +22,15 @@ After expanding the archive, you should have the following files:
     └── AA-AA-AA-AA-FF-FF-FF-FF.CLIENT.key.jks
 ```
 
-You will want to download the **lrsc-bridge** Linux 64bit go binary &amp; Bluemix app deployment **manifest.yml** from [Jazz Hub](https://hub.jazz.net/project/bluemixgarage/lrsc-bridge/overview). Clicking any file in a Jazz Hub repository will open it in a preview mode. There will be a download button under the **Git URL** link.
+You will want to download the **lrsc-bridge** app from [Jazz Hub](https://hub.jazz.net/project/bluemixgarage/lrsc-bridge/overview) as a zip archive. There will be a download button next to the **Branch: master** dropdown.
 
-Create a new folder and place the following 4 files in it:
-
-1. **lrsc-bridge** - downloaded from the Jazz Hub repository
-1. **manifest.yml** - downloaded from the Jazz Hub repository
-1. **client.cert** - downloaded from LRSC web, renamed from AA-AA-AA-AA-FF-FF-FF-FF.CLIENT.cert in our example
-1. **client.key** - downloaded from LRSC web, renamed from AA-AA-AA-AA-FF-FF-FF-FF.CLIENT.key in our example
+Extract the zip file and then place **client.cert** and **client.key** into the extracted **bluemixgarage_lrsc-bridge-master** folder, alongside **manifest.yml**.
 
 You will need to rename the **host** entry in the **manifest.yml** file as it will clash with our own **lrsc-bridge** instance. Host names must be unique per Bluemix region. You might want to use the same name for the **name** entry, but it's not a requirement.
 
-Once you have the above files in place, from your terminal, navigate to this folder, `cf login` with your Bluemix credentials and then `cf push`.
+From your terminal, navigate to this folder, `cf login` with your Bluemix credentials and then `cf push`.
+
+To verify that the bridge is working correctly:
+
+1. Visit the Bluemix URL where the app is deployed (shown after `cf push`) to view the status page
+1. From the Bluemix Dashboard, open the **iotf** service, then click the **LAUNCH** button. You should see devices appear in the list.
