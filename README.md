@@ -8,7 +8,7 @@ You will need to create an **Internet of Things** service called **iotf** in the
 
 You will need to obtain a key archive from the [LRSC Application Router web interface](https://dev.lrsc.ch/).  After logging in, click the **Setup** link at the top and then **Download key archive**.
 
-After expanding the archive, you should have the following files.  These are the ones you need:
+After expanding the archive, you should have the following files:
 ```
 .
 ├── certs
@@ -22,12 +22,14 @@ After expanding the archive, you should have the following files.  These are the
     └── AA-AA-AA-AA-FF-FF-FF-FF.CLIENT.key.jks
 ```
 
-In a separate folder, place these 4 files:
+You will want to download the **lrsc-bridge** Linux 64bit go binary &amp; Bluemix app deployment **manifest.yml** from [Jazz Hub](https://hub.jazz.net/project/bluemixgarage/lrsc-bridge/overview). Clicking any file in a Jazz Hub repository will open it in a preview mode. There will be a download button under the **Git URL** link.
 
-1. **lrsc-bridge** - from this repository, this is the latest stable go binary compiled for Linux 64bit (the Bluemix default)
-1. **manifest.yml** - from this repository, used by the cf cli when pushing to Bluemix
-1. **client.cert** - download from LRSC web, this is your LRSC router TLS certificate
-1. **client.key** - download from LRSC web, this is your LRSC router TLS private key
+Create a new folder and place the following 4 files in it:
+
+1. **lrsc-bridge** - downloaded from the Jazz Hub repository
+1. **manifest.yml** - downloaded from the Jazz Hub repository
+1. **client.cert** - downloaded from LRSC web, renamed from AA-AA-AA-AA-FF-FF-FF-FF.CLIENT.cert in our example
+1. **client.key** - downloaded from LRSC web, renamed from AA-AA-AA-AA-FF-FF-FF-FF.CLIENT.key in our example
 
 You will need to rename the **host** entry in the **manifest.yml** file as it will clash with our own **lrsc-bridge** instance. Host names must be unique per Bluemix region. You might want to use the same name for the **name** entry, but it's not a requirement.
 
