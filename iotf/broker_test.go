@@ -17,11 +17,12 @@ var _ = Describe("IoTF Broker", func() {
 
 	BeforeEach(func() {
 		client = NewMockClient()
+		clientFactory := &mockClientFactory{client: client}
 		reporter := &mockStatusReporter{}
 
 		commandChannel = make(chan bridge.Command)
 
-		connection = &iotfBroker{client: client, commands: commandChannel, StatusReporter: reporter, deviceType: "test"}
+		connection = &iotfBroker{clientFactory: clientFactory, commands: commandChannel, StatusReporter: reporter, deviceType: "test"}
 	})
 
 	AfterEach(func() {
@@ -64,6 +65,10 @@ var _ = Describe("IoTF Broker", func() {
 	})
 
 	Describe("publishMessageFromDevice", func() {
+		BeforeEach(func() {
+			connection.connect()
+		})
+
 		It("sends a message with the correct topic", func() {
 			connection.publishMessageFromDevice(Event{Device: "foo", Payload: "message"})
 			Expect(client.messages[0].Topic()).To(Equal("iot-2/type/test/id/foo/evt/TEST/fmt/json"))
@@ -78,6 +83,7 @@ var _ = Describe("IoTF Broker", func() {
 	Describe("SubscribeToCommandMessages", func() {
 		BeforeEach(func() {
 			client.started = true
+			connection.connect()
 		})
 
 		It("puts received messages on a channel", func() {
@@ -101,6 +107,14 @@ var _ = Describe("extractDeviceFromCommandTopic", func() {
 		Expect(extractDeviceFromCommandTopic(topic)).To(Equal("devid"))
 	})
 })
+
+type mockClientFactory struct {
+	client mqtt.Client
+}
+
+func (f *mockClientFactory) newClient(clientId string) mqtt.Client {
+	return f.client
+}
 
 type mockClient struct {
 	connectFail          bool
