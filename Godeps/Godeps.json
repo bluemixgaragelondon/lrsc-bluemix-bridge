@@ -1,10 +1,15 @@
 {
 	"ImportPath": "hub.jazz.net/git/bluemixgarage/lrsc-bridge",
-	"GoVersion": "go1.4",
+	"GoVersion": "go1.4.1",
 	"Packages": [
 		"./..."
 	],
 	"Deps": [
+		{
+			"ImportPath": "code.google.com/p/go-uuid/uuid",
+			"Comment": "null-15",
+			"Rev": "35bc42037350f0078e3c974c6ea690f1926603ab"
+		},
 		{
 			"ImportPath": "code.google.com/p/go.net/websocket",
 			"Comment": "null-228",
