@@ -3,3 +3,4 @@ client.key
 .secrets
 /tmp
 /.cf
+coverage/*.html
