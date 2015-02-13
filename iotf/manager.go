@@ -44,7 +44,12 @@ func NewIoTFManager(vcapServices string, commands chan<- bridge.Command, events 
 	}
 
 	errChan := make(chan error)
-	broker := newIoTFBroker(iotfCreds, commands, errChan, deviceType)
+	clientFactory := &mqttClientFactory{credentials: *iotfCreds, connectionLostHandler: func(err error) {
+		logger.Error("IoTF connection lost handler called: " + err.Error())
+		errChan <- errors.New("IoTF connection lost handler called: " + err.Error())
+	}}
+
+	broker := newIoTFBroker(iotfCreds, commands, errChan, deviceType, clientFactory)
 	deviceRegistrar := newIotfHttpRegistrar(iotfCreds, deviceType)
 	return &IoTFManager{broker: broker, deviceRegistrar: deviceRegistrar, events: events, errChan: errChan}, nil
 }

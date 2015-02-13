@@ -1,14 +1,12 @@
 package iotf
 
 import (
-	"errors"
+	"code.google.com/p/go-uuid/uuid"
 	"fmt"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/bridge"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/mqtt"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
-	"math/rand"
 	"regexp"
-	"time"
 )
 
 type broker interface {
@@ -20,53 +18,35 @@ type broker interface {
 type iotfBroker struct {
 	client mqtt.Client
 	reporter.StatusReporter
-	commands   chan<- bridge.Command
-	deviceType string
+	commands      chan<- bridge.Command
+	deviceType    string
+	clientFactory clientFactory
+	clientId      string
 }
 
-func newClientOptions(credentials *Credentials, errChan chan<- error) mqtt.ClientOptions {
-	return mqtt.ClientOptions{
-		Broker:   fmt.Sprintf("tls://%v:%v", credentials.MqttHost, credentials.MqttSecurePort),
-		ClientId: fmt.Sprintf("a:%v:$v", credentials.Org, generateClientIdSuffix()),
-		Username: credentials.User,
-		Password: credentials.Password,
-		OnConnectionLost: func(err error) {
-			logger.Error("IoTF connection lost handler called: " + err.Error())
-			errChan <- errors.New("IoTF connection lost handler called: " + err.Error())
-		},
-	}
-}
-
-func generateClientIdSuffix() string {
-	rand.Seed(time.Now().UTC().UnixNano())
-	suffix := rand.Intn(1000)
-	return string(suffix)
-}
-
-func newIoTFBroker(credentials *Credentials, commands chan<- bridge.Command, errChan chan<- error, deviceType string) *iotfBroker {
-	clientOptions := newClientOptions(credentials, errChan)
-	client := mqtt.NewPahoClient(clientOptions)
+func newIoTFBroker(credentials *Credentials, commands chan<- bridge.Command, errChan chan<- error, deviceType string, clientFactory clientFactory) *iotfBroker {
 	reporter := reporter.New()
-	return &iotfBroker{client: client, commands: commands, StatusReporter: reporter, deviceType: deviceType}
+	return &iotfBroker{commands: commands, StatusReporter: reporter, deviceType: deviceType, clientFactory: clientFactory, clientId: uuid.New()}
 }
 
-func (self *iotfBroker) connect() error {
-	var err error
-	err = self.client.Start()
+func (b *iotfBroker) connect() error {
+	b.client = b.clientFactory.newClient(b.clientId)
+
+	err := b.client.Start()
 	if err != nil {
-		self.Report("CONNECTION", err.Error())
+		b.Report("CONNECTION", err.Error())
 		return err
 	}
 
-	self.Report("CONNECTION", "OK")
+	b.Report("CONNECTION", "OK")
 
 	logger.Info("Connected to MQTT")
-	err = self.subscribeToCommandMessages(self.commands)
+	err = b.subscribeToCommandMessages(b.commands)
 	if err != nil {
-		self.Report("SUBSCRIPTION", err.Error())
+		b.Report("SUBSCRIPTION", err.Error())
 		return err
 	}
-	self.Report("SUBSCRIPTION", "OK")
+	b.Report("SUBSCRIPTION", "OK")
 	return nil
 }
 
