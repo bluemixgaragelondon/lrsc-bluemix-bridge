@@ -5,6 +5,7 @@ import (
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
 	"net/http"
 	"os"
+	"runtime"
 )
 
 func setupHttp(reporters map[string]reporter.StatusReporter) {
@@ -25,6 +26,13 @@ func setupHttp(reporters map[string]reporter.StatusReporter) {
 		if present {
 			fmt.Fprintf(res, "%v", reporter.Summary())
 		}
+	})
+
+	http.HandleFunc("/stack", func(res http.ResponseWriter, req *http.Request) {
+		data := make([]byte, 100000)
+		all := true
+		length := runtime.Stack(data, all)
+		fmt.Fprintf(res, "%v", string(data[:length]))
 	})
 }
 
