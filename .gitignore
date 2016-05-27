@@ -4,3 +4,4 @@ client.key
 /tmp
 /.cf
 coverage/*.html
+lrsc-bridge
