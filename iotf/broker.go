@@ -1,7 +1,7 @@
 package iotf
 
 import (
-	"code.google.com/p/go-uuid/uuid"
+	"github.com/pborman/uuid"
 	"fmt"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/bridge"
 	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/mqtt"

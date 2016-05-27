@@ -6,13 +6,12 @@
 	],
 	"Deps": [
 		{
-			"ImportPath": "code.google.com/p/go.net/websocket",
+			"ImportPath": "golang.org/x/net/websocket",
 			"Comment": "null-228",
-			"Rev": "80a277b6a70cfe749ed0e39931c5ff3220f13518"
-		},
-		{
-			"ImportPath": "git.eclipse.org/gitroot/paho/org.eclipse.paho.mqtt.golang.git",
-			"Rev": "0d6c6e73b249ca8d48fde878b4d1cfbb4cd45a5e"
+			"Rev": "30db96677b74e24b967e23f911eb3364fc61a011"
+		},{
+			"ImportPath": "github.com/eclipse/paho.mqtt.golang",
+			"Rev": "2dac3f59a0f5c9a46e5ee307ce6c972809129005"
 		},
 		{
 			"ImportPath": "github.com/cromega/clogger",
