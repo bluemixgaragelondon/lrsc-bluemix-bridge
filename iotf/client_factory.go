@@ -2,7 +2,7 @@ package iotf
 
 import (
 	"fmt"
-	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/mqtt"
+	"github.com/bluemixgaragelondon/lrsc-bluemix-bridge/mqtt"
 )
 
 type clientFactory interface {
