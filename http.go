@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
+	"github.com/bluemixgaragelondon/lrsc-bluemix-bridge/reporter"
 	"net/http"
 	"os"
 	"runtime"

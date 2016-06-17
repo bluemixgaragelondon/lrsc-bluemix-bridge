@@ -3,9 +3,9 @@ package iotf
 import (
 	"github.com/pborman/uuid"
 	"fmt"
-	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/bridge"
-	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/mqtt"
-	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
+	"github.com/bluemixgaragelondon/lrsc-bluemix-bridge/bridge"
+	"github.com/bluemixgaragelondon/lrsc-bluemix-bridge/mqtt"
+	"github.com/bluemixgaragelondon/lrsc-bluemix-bridge/reporter"
 	"regexp"
 )
 

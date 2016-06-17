@@ -4,8 +4,8 @@ import (
 	"errors"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/bridge"
-	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
+	"github.com/bluemixgaragelondon/lrsc-bluemix-bridge/bridge"
+	"github.com/bluemixgaragelondon/lrsc-bluemix-bridge/reporter"
 	"io"
 )
 

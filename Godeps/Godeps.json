@@ -1,5 +1,5 @@
 {
-	"ImportPath": "hub.jazz.net/git/bluemixgarage/lrsc-bridge",
+	"ImportPath": "github.com/bluemixgaragelondon/lrsc-bluemix-bridge",
 	"GoVersion": "go1.4.1",
 	"GodepVersion": "v65",
 	"Deps": [

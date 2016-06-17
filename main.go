@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/cromega/clogger"
-	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/bridge"
-	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/iotf"
-	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/reporter"
-	"hub.jazz.net/git/bluemixgarage/lrsc-bridge/utils"
+	"github.com/bluemixgaragelondon/lrsc-bluemix-bridge/bridge"
+	"github.com/bluemixgaragelondon/lrsc-bluemix-bridge/iotf"
+	"github.com/bluemixgaragelondon/lrsc-bluemix-bridge/reporter"
+	"github.com/bluemixgaragelondon/lrsc-bluemix-bridge/utils"
 	"os"
 	"time"
 )

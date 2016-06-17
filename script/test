@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-APP_PKG_NAME="hub.jazz.net/git/bluemixgarage/lrsc-bridge"
+APP_PKG_NAME="github.com/bluemixgaragelondon/lrsc-bluemix-bridge"
 ARGS="$@"
 
 main() {
